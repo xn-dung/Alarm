@@ -1,0 +1,10 @@
+- [ ] Refactor package names to `com.example.myapplication`
+- [ ] Fix `AlarmDatabaseHelper` and `AlarmDao` logic
+- [ ] Implement `AlarmScheduler` for `AlarmManager`
+- [ ] Implement `AlarmReceiver` and `AlarmService`
+- [ ] Create `AlarmActivity` with Math Mission logic
+- [ ] Implement `TimerFragment` logic
+- [ ] Implement `StopwatchFragment` logic
+- [ ] Update `MainActivity` navigation logic
+- [ ] Modernize UI layouts (`item_alarm`, `fragment_add_edit_alarm`, etc.)
+- [ ] Add notification support for upcoming alarms

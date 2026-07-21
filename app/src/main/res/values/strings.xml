@@ -1,0 +1,4 @@
+<resources>
+    <string name="app_name">Alarm</string>
+    <string-array name="challenges"><item>Simple tap to dismiss</item><item>Solve a math challenge</item></string-array>
+</resources>

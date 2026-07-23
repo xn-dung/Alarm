@@ -1,6 +1,13 @@
 package com.example.myapplication.Activities;
 
 import android.os.Bundle;
+import android.Manifest;
+import android.app.AlarmManager;
+import android.content.Context;
+import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.os.Build;
+import android.provider.Settings;
 
 import androidx.appcompat.app.AppCompatActivity;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
@@ -25,6 +32,14 @@ public class MainActivity extends AppCompatActivity {
         if (savedInstanceState == null) {
             show(new AlarmFragment());
             nav.setSelectedItemId(R.id.nav_alarm);
+        }
+        requestAlarmPermissions();
+    }
+    private void requestAlarmPermissions() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU && checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) requestPermissions(new String[]{Manifest.permission.POST_NOTIFICATIONS}, 9);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            AlarmManager manager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
+            if (!manager.canScheduleExactAlarms()) startActivity(new Intent(Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM));
         }
     }
     private void show(androidx.fragment.app.Fragment fragment) {

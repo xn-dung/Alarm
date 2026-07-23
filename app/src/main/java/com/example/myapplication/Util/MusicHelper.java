@@ -2,6 +2,8 @@ package com.example.myapplication.Util;
 
 import android.content.Context;
 import android.media.MediaPlayer;
+import android.media.AudioAttributes;
+import android.media.AudioManager;
 import android.net.Uri;
 import android.os.Handler;
 import android.os.Looper;
@@ -28,7 +30,7 @@ public class MusicHelper {
     public void playFromResource(Context context, int resId){
         stop();
         try {
-            mediaPlayer = MediaPlayer.create(context,resId);
+            mediaPlayer = MediaPlayer.create(context,resId,new AudioAttributes.Builder().setUsage(AudioAttributes.USAGE_ALARM).setContentType(AudioAttributes.CONTENT_TYPE_MUSIC).build(),AudioManager.AUDIO_SESSION_ID_GENERATE);
         } catch (Exception ignored) {
             mediaPlayer = null;
         }
@@ -41,7 +43,7 @@ public class MusicHelper {
     }
     public void playFromUri(Context context, String value){
         stop();
-        try { mediaPlayer = MediaPlayer.create(context, Uri.parse(value)); } catch (Exception ignored) { mediaPlayer = null; }
+        try { mediaPlayer = MediaPlayer.create(context, Uri.parse(value), null, new AudioAttributes.Builder().setUsage(AudioAttributes.USAGE_ALARM).setContentType(AudioAttributes.CONTENT_TYPE_MUSIC).build(), AudioManager.AUDIO_SESSION_ID_GENERATE); } catch (Exception ignored) { mediaPlayer = null; }
         if (mediaPlayer != null) mediaPlayer.start();
     }
     public void playRandom(Context context){

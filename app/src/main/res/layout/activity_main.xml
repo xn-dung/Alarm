@@ -24,7 +24,6 @@
         android:elevation="0dp"
         android:paddingTop="6dp"
         android:paddingBottom="6dp"
-        app:itemActiveIndicatorStyle="@style/Widget.Material3.BottomNavigationView"
         app:itemIconTint="@color/bottom_nav_tint"
         app:itemTextColor="@color/bottom_nav_tint"
         app:labelVisibilityMode="labeled"

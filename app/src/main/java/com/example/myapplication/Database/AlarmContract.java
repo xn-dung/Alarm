@@ -17,5 +17,6 @@ public class AlarmContract {
         public static final String COLUMN_LOOP = "loop_alarm";
         public static final String COLUMN_VIBRATE = "vibrate";
         public static final String COLUMN_MUSIC_ID = "music_id";
+        public static final String COLUMN_DISMISS_MODE = "dismiss_mode";
     }
 }

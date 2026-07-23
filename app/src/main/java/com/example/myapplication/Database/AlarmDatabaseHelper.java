@@ -13,7 +13,7 @@ import java.util.List;
 
 public class AlarmDatabaseHelper extends SQLiteOpenHelper {
     private static final String DATABASE_NAME = "alarm.db";
-    private static final int DATABASE_VERSION = 1;
+    private static final int DATABASE_VERSION = 2;
 
     public AlarmDatabaseHelper(Context context){
         super(context,DATABASE_NAME,null,DATABASE_VERSION);
@@ -34,7 +34,8 @@ public class AlarmDatabaseHelper extends SQLiteOpenHelper {
                         AlarmContract.AlarmEntry.COLUMN_RANDOM + " INTEGER, "+
                         AlarmContract.AlarmEntry.COLUMN_LOOP + " INTEGER, " +
                         AlarmContract.AlarmEntry.COLUMN_VIBRATE + " INTEGER, " +
-                        AlarmContract.AlarmEntry.COLUMN_MUSIC_ID + " INTEGER DEFAULT 0" +");";
+                        AlarmContract.AlarmEntry.COLUMN_MUSIC_ID + " INTEGER DEFAULT 0, " +
+                        AlarmContract.AlarmEntry.COLUMN_DISMISS_MODE + " INTEGER DEFAULT 0" +");";
         db.execSQL(CREATE_TABLE);
 
     }
@@ -129,9 +130,7 @@ public class AlarmDatabaseHelper extends SQLiteOpenHelper {
     }
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion){
-        db.execSQL("DROP TABLE IF EXISTS " + AlarmContract.AlarmEntry.TABLE_NAME);
-
-        onCreate(db);
+        if (oldVersion < 2) db.execSQL("ALTER TABLE " + AlarmContract.AlarmEntry.TABLE_NAME + " ADD COLUMN " + AlarmContract.AlarmEntry.COLUMN_DISMISS_MODE + " INTEGER DEFAULT 0");
     }
     private Alarm cursorToAlarm(Cursor cursor){
         Alarm alarm = new Alarm();
@@ -172,6 +171,7 @@ public class AlarmDatabaseHelper extends SQLiteOpenHelper {
         int musicIdx = cursor.getColumnIndexOrThrow(
                 AlarmContract.AlarmEntry.COLUMN_MUSIC_ID
         );
+        int dismissModeIdx = cursor.getColumnIndexOrThrow(AlarmContract.AlarmEntry.COLUMN_DISMISS_MODE);
         alarm.setId(cursor.getInt(idIdx));
         alarm.setHour(cursor.getInt(hourIdx));
         alarm.setMinute(cursor.getInt(minuteIdx));
@@ -184,6 +184,7 @@ public class AlarmDatabaseHelper extends SQLiteOpenHelper {
         alarm.setVibrate(cursor.getInt(vibrateIdx) == 1);
         alarm.setLoop(cursor.getInt(loopIdx) == 1);
         alarm.setMusicId(cursor.getInt(musicIdx));
+        alarm.setDismissMode(cursor.getInt(dismissModeIdx));
         return alarm;
     }
 

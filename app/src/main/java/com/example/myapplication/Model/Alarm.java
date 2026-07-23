@@ -15,6 +15,7 @@ public class Alarm implements Serializable {
     private boolean vibrate;
     private boolean loop;
     private int musicId;
+    private int dismissMode;
 
     public Alarm() {
         this.enabled = true;
@@ -60,6 +61,7 @@ public class Alarm implements Serializable {
     public int getMusicId() {
         return musicId;
     }
+    public int getDismissMode() { return dismissMode; }
 
     public void setId(int id) {
         this.id = id;
@@ -108,4 +110,5 @@ public class Alarm implements Serializable {
     public void setMusicId(int musicId) {
         this.musicId = musicId;
     }
+    public void setDismissMode(int dismissMode) { this.dismissMode = dismissMode; }
 }

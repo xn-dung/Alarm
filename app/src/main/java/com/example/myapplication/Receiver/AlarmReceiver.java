@@ -19,6 +19,7 @@ public class AlarmReceiver extends BroadcastReceiver {
         } else {
             context.startService(serviceIntent);
         }
+        if (intent.getBooleanExtra("SNOOZE", false)) return;
         int id = intent.getIntExtra("ALARM_ID", -1);
         if (id >= 0) {
             Alarm alarm = new AlarmDao(context).getAlarmbyId(id);

@@ -51,13 +51,19 @@ public class AlarmService extends Service {
         if (alarm != null) {
             if (alarm.getRandomMusic()) {
                 musicHelper.playRandom(this);
+            } else if (alarm.getMusicUri() != null && !alarm.getMusicUri().isEmpty()) {
+                musicHelper.playFromUri(this, alarm.getMusicUri());
             } else {
                 int[] sounds = {R.raw.alarm1, R.raw.alarm2, R.raw.alarm3, R.raw.alarm4, R.raw.alarm5};
                 musicHelper.playFromResource(this, sounds[Math.max(0, Math.min(alarm.getMusicId(), 4))]);
             }
             musicHelper.setLooping(alarm.getLoop());
             musicHelper.setVolume(alarm.getVolume() / 100f);
-            if (alarm.getVibrate()) ((android.os.Vibrator) getSystemService(VIBRATOR_SERVICE)).vibrate(android.os.VibrationEffect.createWaveform(new long[]{0, 500, 500}, 0));
+            if (alarm.getVibrate()) {
+                android.os.Vibrator vibrator = (android.os.Vibrator) getSystemService(VIBRATOR_SERVICE);
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) vibrator.vibrate(android.os.VibrationEffect.createWaveform(new long[]{0, 500, 500}, 0));
+                else vibrator.vibrate(new long[]{0, 500, 500}, 0);
+            }
         } else {
             musicHelper.playDefault(this);
         }

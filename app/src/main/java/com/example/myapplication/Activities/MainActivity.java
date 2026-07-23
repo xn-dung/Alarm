@@ -2,7 +2,6 @@ package com.example.myapplication.Activities;
 
 import android.os.Bundle;
 
-import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.example.myapplication.Fragment.AlarmFragment;

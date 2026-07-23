@@ -2,6 +2,7 @@ package com.example.myapplication.Util;
 
 import android.content.Context;
 import android.media.MediaPlayer;
+import android.net.Uri;
 import android.os.Handler;
 import android.os.Looper;
 import com.example.myapplication.R;
@@ -37,6 +38,11 @@ public class MusicHelper {
     }
     public void playDefault(Context context){
         playFromResource(context,DEFAULT_ALARMS[0]);
+    }
+    public void playFromUri(Context context, String value){
+        stop();
+        try { mediaPlayer = MediaPlayer.create(context, Uri.parse(value)); } catch (Exception ignored) { mediaPlayer = null; }
+        if (mediaPlayer != null) mediaPlayer.start();
     }
     public void playRandom(Context context){
         Random random = new Random();

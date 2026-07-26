@@ -1,3 +1,119 @@
 package com.example.myapplication.Fragment;
-import android.os.Bundle;import android.view.View;import android.widget.TextView;import androidx.annotation.NonNull;import androidx.annotation.Nullable;import androidx.fragment.app.Fragment;import androidx.recyclerview.widget.LinearLayoutManager;import androidx.recyclerview.widget.RecyclerView;import com.example.myapplication.Adapter.AlarmAdapter;import com.example.myapplication.DAO.AlarmDao;import com.example.myapplication.Model.Alarm;import com.example.myapplication.R;import com.example.myapplication.Util.AlarmScheduler;import java.util.Calendar;import java.util.List;import java.util.Locale;
-public class AlarmFragment extends Fragment {private AlarmDao dao;private AlarmAdapter adapter;public AlarmFragment(){super(R.layout.fragment_alarm);}@Override public void onViewCreated(@NonNull View view,@Nullable Bundle state){dao=new AlarmDao(requireContext());adapter=new AlarmAdapter(a->edit(a.getId()),this::setEnabled);RecyclerView list=view.findViewById(R.id.rv_alarms);list.setLayoutManager(new LinearLayoutManager(requireContext()));list.setAdapter(adapter);view.findViewById(R.id.quick_add).setOnClickListener(v->edit(-1));load();}@Override public void onResume(){super.onResume();if(adapter!=null)load();}private void load(){List<Alarm> alarms=dao.getAllAlarms();adapter.setAlarmList(alarms);TextView time=getView().findViewById(R.id.tv_next_time),detail=getView().findViewById(R.id.tv_next_detail);Alarm next=null;long nearest=Long.MAX_VALUE;for(Alarm alarm:alarms)if(alarm.getEnabled()){Calendar c=Calendar.getInstance();c.set(Calendar.HOUR_OF_DAY,alarm.getHour());c.set(Calendar.MINUTE,alarm.getMinute());c.set(Calendar.SECOND,0);if(c.getTimeInMillis()<=System.currentTimeMillis())c.add(Calendar.DAY_OF_YEAR,1);String repeat=alarm.getRepeatDays();if(repeat!=null&&!repeat.isEmpty())for(int i=0;i<7;i++){int day=(c.get(Calendar.DAY_OF_WEEK)+5)%7;if(repeat.contains(String.valueOf(day)))break;c.add(Calendar.DAY_OF_YEAR,1);}if(c.getTimeInMillis()<nearest){nearest=c.getTimeInMillis();next=alarm;}}if(next==null){time.setText("No alarm set");detail.setText("Add one and let us wake you gently");}else{time.setText(String.format(Locale.getDefault(),"%02d:%02d",next.getHour(),next.getMinute()));detail.setText(next.getLabel()==null||next.getLabel().isEmpty()?"Alarm is ready":next.getLabel());}}private void edit(int id){getParentFragmentManager().beginTransaction().replace(R.id.fragment_container,CrudFragment.newInstance(id)).addToBackStack(null).commit();}private void setEnabled(Alarm alarm){dao.updateAlarm(alarm);if(alarm.getEnabled())AlarmScheduler.schedule(requireContext(),alarm);else AlarmScheduler.cancel(requireContext(),alarm.getId());load();}}
+
+import android.os.Bundle;
+import android.view.View;
+import android.widget.TextView;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.fragment.app.Fragment;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
+
+import com.example.myapplication.Adapter.AlarmAdapter;
+import com.example.myapplication.DAO.AlarmDao;
+import com.example.myapplication.Model.Alarm;
+import com.example.myapplication.R;
+import com.example.myapplication.Util.AlarmScheduler;
+
+import java.util.Calendar;
+import java.util.List;
+import java.util.Locale;
+
+public class AlarmFragment extends Fragment {
+    
+    private AlarmDao dao;
+    private AlarmAdapter adapter;
+
+    public AlarmFragment() {
+        super(R.layout.fragment_alarm);
+    }
+
+    @Override
+    public void onViewCreated(@NonNull View view, @Nullable Bundle state) {
+        dao = new AlarmDao(requireContext());
+        adapter = new AlarmAdapter(a -> edit(a.getId()), this::setEnabled);
+        
+        RecyclerView list = view.findViewById(R.id.rv_alarms);
+        list.setLayoutManager(new LinearLayoutManager(requireContext()));
+        list.setAdapter(adapter);
+        
+        view.findViewById(R.id.quick_add).setOnClickListener(v -> edit(-1));
+        load();
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        if (adapter != null) {
+            load();
+        }
+    }
+
+    private void load() {
+        List<Alarm> alarms = dao.getAllAlarms();
+        adapter.setAlarmList(alarms);
+        
+        TextView time = getView().findViewById(R.id.tv_next_time);
+        TextView detail = getView().findViewById(R.id.tv_next_detail);
+        
+        Alarm next = null;
+        long nearest = Long.MAX_VALUE;
+        
+        for (Alarm alarm : alarms) {
+            if (alarm.getEnabled()) {
+                Calendar c = Calendar.getInstance();
+                c.set(Calendar.HOUR_OF_DAY, alarm.getHour());
+                c.set(Calendar.MINUTE, alarm.getMinute());
+                c.set(Calendar.SECOND, 0);
+                
+                if (c.getTimeInMillis() <= System.currentTimeMillis()) {
+                    c.add(Calendar.DAY_OF_YEAR, 1);
+                }
+                
+                String repeat = alarm.getRepeatDays();
+                if (repeat != null && !repeat.isEmpty()) {
+                    for (int i = 0; i < 7; i++) {
+                        int day = (c.get(Calendar.DAY_OF_WEEK) + 5) % 7;
+                        if (repeat.contains(String.valueOf(day))) {
+                            break;
+                        }
+                        c.add(Calendar.DAY_OF_YEAR, 1);
+                    }
+                }
+                
+                if (c.getTimeInMillis() < nearest) {
+                    nearest = c.getTimeInMillis();
+                    next = alarm;
+                }
+            }
+        }
+        
+        if (next == null) {
+            time.setText("No alarm set");
+            detail.setText("Add one and let us wake you gently");
+        } else {
+            time.setText(String.format(Locale.getDefault(), "%02d:%02d", next.getHour(), next.getMinute()));
+            detail.setText(next.getLabel() == null || next.getLabel().isEmpty() ? "Alarm is ready" : next.getLabel());
+        }
+    }
+
+    private void edit(int id) {
+        getParentFragmentManager().beginTransaction()
+                .replace(R.id.fragment_container, CrudFragment.newInstance(id))
+                .addToBackStack(null)
+                .commit();
+    }
+
+    private void setEnabled(Alarm alarm) {
+        dao.updateAlarm(alarm);
+        
+        if (alarm.getEnabled()) {
+            AlarmScheduler.schedule(requireContext(), alarm);
+        } else {
+            AlarmScheduler.cancel(requireContext(), alarm.getId());
+        }
+        
+        load();
+    }
+}

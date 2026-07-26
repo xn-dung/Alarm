@@ -34,6 +34,7 @@
         </activity>
         <receiver android:name=".Receiver.AlarmReceiver" android:exported="false" />
         <receiver android:name=".Receiver.UpcomingAlarmReceiver" android:exported="false" />
+        <receiver android:name=".Receiver.TimerReceiver" android:exported="false" />
         <service android:name=".Service.AlarmService" android:exported="false" android:foregroundServiceType="mediaPlayback" />
     </application>
 

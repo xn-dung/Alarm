@@ -85,7 +85,7 @@
             android:background="@drawable/bg_button_secondary"
             android:text="Cancel"
             android:textAllCaps="false"
-            android:textColor="@color/text_secondary" />
+            android:textColor="@color/text_primary" />
 
         <Button
             android:id="@+id/btn_start"

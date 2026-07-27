@@ -29,6 +29,43 @@ public class WorldClockFragment extends Fragment {
     private static final String[] ZONES = {"Asia/Ho_Chi_Minh", "Asia/Tokyo", "Asia/Seoul", "Asia/Singapore", "Europe/London", "Europe/Paris", "America/New_York", "America/Los_Angeles", "Australia/Sydney"};
     private static final String[] CITIES = {"Vietnam", "Tokyo", "Seoul", "Singapore", "London", "Paris", "New York", "Los Angeles", "Sydney"};
     private WorldClockAdapter adapter;
+    private final android.os.Handler clockHandler = new android.os.Handler(android.os.Looper.getMainLooper());
+    private final Runnable tick = new Runnable() {
+        @Override
+        public void run() {
+            showWorldClocks();
+            clockHandler.postDelayed(this, 1000);
+        }
+    };
+
+    private void startTicking() {
+        clockHandler.removeCallbacks(tick);
+        clockHandler.post(tick);
+    }
+
+    private void stopTicking() {
+        clockHandler.removeCallbacks(tick);
+    }
+
+    // MainActivity switches tabs with show/hide, so onResume alone is not enough
+    // to know when this screen appears or disappears.
+    @Override
+    public void onHiddenChanged(boolean hidden) {
+        super.onHiddenChanged(hidden);
+        if (hidden) stopTicking(); else startTicking();
+    }
+
+    @Override
+    public void onPause() {
+        stopTicking();
+        super.onPause();
+    }
+
+    @Override
+    public void onDestroyView() {
+        stopTicking();
+        super.onDestroyView();
+    }
 
     public WorldClockFragment() {
         super(R.layout.fragment_world_clock);
@@ -48,7 +85,7 @@ public class WorldClockFragment extends Fragment {
     @Override
     public void onResume() {
         super.onResume();
-        if (getView() != null) showWorldClocks();
+        if (getView() != null && !isHidden()) startTicking();
     }
 
     private SharedPreferences preferences() {

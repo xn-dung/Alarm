@@ -25,16 +25,13 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
         BottomNavigationView nav = findViewById(R.id.bottom_navigation);
         nav.setOnItemSelectedListener(item -> {
-            if (item.getItemId() == R.id.nav_alarm) show(new AlarmFragment());
-            else if (item.getItemId() == R.id.nav_world) show(new WorldClockFragment());
-            else if (item.getItemId() == R.id.nav_timer) show(new TimerFragment());
-            else show(new StopwatchFragment());
+            if (item.getItemId() == R.id.nav_alarm) show("alarm");
+            else if (item.getItemId() == R.id.nav_world) show("world");
+            else if (item.getItemId() == R.id.nav_timer) show("timer");
+            else show("stopwatch");
             return true;
         });
-        if (savedInstanceState == null) {
-            show(new AlarmFragment());
-            nav.setSelectedItemId(R.id.nav_alarm);
-        }
+        if (savedInstanceState == null) nav.setSelectedItemId(R.id.nav_alarm);
         requestAlarmPermissions();
     }
     private void requestAlarmPermissions() {
@@ -44,7 +41,23 @@ public class MainActivity extends AppCompatActivity {
             if (!manager.canScheduleExactAlarms()) startActivity(new Intent(Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM));
         }
     }
-    private void show(androidx.fragment.app.Fragment fragment) {
-        getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container, fragment).commit();
+    // Show/hide keeps each tab's fragment alive so a running timer or stopwatch
+    // survives tab switches (a replaced TimerFragment would cancel its countdown).
+    private void show(String tag) {
+        androidx.fragment.app.FragmentManager fm = getSupportFragmentManager();
+        androidx.fragment.app.FragmentTransaction t = fm.beginTransaction();
+        for (String other : new String[]{"alarm", "world", "timer", "stopwatch"}) {
+            androidx.fragment.app.Fragment f = fm.findFragmentByTag(other);
+            if (f != null && !other.equals(tag)) t.hide(f);
+        }
+        androidx.fragment.app.Fragment target = fm.findFragmentByTag(tag);
+        if (target == null) {
+            if (tag.equals("alarm")) target = new AlarmFragment();
+            else if (tag.equals("world")) target = new WorldClockFragment();
+            else if (tag.equals("timer")) target = new TimerFragment();
+            else target = new StopwatchFragment();
+            t.add(R.id.fragment_container, target, tag);
+        }
+        t.show(target).commit();
     }
 }

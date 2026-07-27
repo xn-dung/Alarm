@@ -5,7 +5,7 @@
     android:background="@color/bg_dark"
     android:padding="32dp">
 
-    <TextView
+    <TextClock
         android:id="@+id/tv_current_time"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
@@ -14,7 +14,8 @@
         android:textColor="@color/text_primary"
         android:textSize="64sp"
         android:textStyle="bold"
-        android:text="08:00" />
+        android:format12Hour="h:mm"
+        android:format24Hour="HH:mm" />
 
     <TextView
         android:id="@+id/tv_alarm_label"

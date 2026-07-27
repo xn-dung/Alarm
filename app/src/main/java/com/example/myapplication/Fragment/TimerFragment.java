@@ -42,6 +42,7 @@ public class TimerFragment extends Fragment {
     private int sound;
     private Uri customSound;
     private MediaPlayer player;
+    private boolean ringing;
     private TimerRecentDatabase database;
     private NumberPicker hours;
     private NumberPicker minutes;
@@ -96,27 +97,39 @@ public class TimerFragment extends Fragment {
     }
 
     private void toggleTimer() {
-        if (timer != null) {
+        if (ringing) { // "Stop": silence the finished timer and reset
+            cancelTimer();
+            return;
+        }
+        if (timer != null) { // pause, keep the remaining time
             timer.cancel();
             timer = null;
             TimerScheduler.cancel(requireContext());
             start.setText("Resume");
             return;
         }
-        remaining = (hours.getValue() * 3600L + minutes.getValue() * 60L + seconds.getValue()) * 1000L;
-        if (remaining <= 0) return;
-        database.save(remaining / 1000L, name.getText().toString().trim());
-        showRecent();
+        if (remaining <= 0) { // fresh start; a paused timer resumes with its own remaining
+            remaining = (hours.getValue() * 3600L + minutes.getValue() * 60L + seconds.getValue()) * 1000L;
+            if (remaining <= 0) return;
+            database.save(remaining / 1000L, name.getText().toString().trim());
+            showRecent();
+        }
         run();
     }
 
     private void cancelTimer() {
         if (timer != null) timer.cancel();
         timer = null;
+        remaining = 0;
         TimerScheduler.cancel(requireContext());
         stopPlayer();
-        display.setVisibility(View.GONE);
+        showPickers(true);
         start.setText("Start");
+    }
+
+    private void showPickers(boolean picking) {
+        requireView().findViewById(R.id.layout_pickers).setVisibility(picking ? View.VISIBLE : View.GONE);
+        requireView().findViewById(R.id.countdown_container).setVisibility(picking ? View.GONE : View.VISIBLE);
     }
 
     private void showRecent() {
@@ -127,6 +140,8 @@ public class TimerFragment extends Fragment {
     }
 
     private void useRecent(RecentTimer timer) {
+        if (this.timer != null || ringing) return;
+        remaining = 0;
         long value = timer.getSeconds();
         hours.setValue((int) (value / 3600));
         minutes.setValue((int) ((value / 60) % 60));
@@ -178,7 +193,11 @@ public class TimerFragment extends Fragment {
                     sound = choice[0];
                     customSound = null;
                     melody.setText(names[sound]);
-                    stopPlayer();
+                })
+                // Also stops the preview when the dialog is dismissed by tapping
+                // outside; guarded so it never silences a finished timer's ring.
+                .setOnDismissListener(dialog -> {
+                    if (!ringing) stopPlayer();
                 })
                 .show();
     }
@@ -209,7 +228,7 @@ public class TimerFragment extends Fragment {
 
     private void run() {
         TimerScheduler.schedule(requireContext(), remaining);
-        display.setVisibility(View.VISIBLE);
+        showPickers(false);
         timer = new CountDownTimer(remaining, 250) {
             @Override
             public void onTick(long millisUntilFinished) {
@@ -220,7 +239,9 @@ public class TimerFragment extends Fragment {
             @Override
             public void onFinish() {
                 timer = null;
-                start.setText("Start");
+                remaining = 0;
+                display.setText("00:00:00");
+                start.setText("Stop");
                 ring();
             }
         }.start();
@@ -236,15 +257,22 @@ public class TimerFragment extends Fragment {
                 int[] ids = {R.raw.alarm1, R.raw.alarm2, R.raw.alarm3, R.raw.alarm4, R.raw.alarm5};
                 player = MediaPlayer.create(requireContext(), ids[sound], attributes(), AudioManager.AUDIO_SESSION_ID_GENERATE);
             }
+            // Fall back to the built-in sound if the picked device audio failed to open
+            if (player == null && customSound != null) {
+                int[] ids = {R.raw.alarm1, R.raw.alarm2, R.raw.alarm3, R.raw.alarm4, R.raw.alarm5};
+                player = MediaPlayer.create(requireContext(), ids[sound], attributes(), AudioManager.AUDIO_SESSION_ID_GENERATE);
+            }
             if (player != null) {
                 player.setLooping(true);
                 player.start();
+                ringing = true;
             }
         } catch (Exception ignored) {
         }
     }
 
     private void stopPlayer() {
+        ringing = false;
         if (player == null) return;
         try {
             player.stop();

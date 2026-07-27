@@ -39,7 +39,20 @@ public class AlarmFragment extends Fragment {
         list.setAdapter(adapter);
         
         view.findViewById(R.id.quick_add).setOnClickListener(v -> edit(-1));
+        getParentFragmentManager().addOnBackStackChangedListener(reload);
         load();
+    }
+
+    // Reloads the list when CrudFragment pops; onResume no longer fires for that
+    // since the edit screen is added on top instead of replacing this fragment.
+    private final androidx.fragment.app.FragmentManager.OnBackStackChangedListener reload = () -> {
+        if (getView() != null) load();
+    };
+
+    @Override
+    public void onDestroyView() {
+        getParentFragmentManager().removeOnBackStackChangedListener(reload);
+        super.onDestroyView();
     }
 
     @Override
@@ -98,9 +111,11 @@ public class AlarmFragment extends Fragment {
         }
     }
 
+    // add() instead of replace() so the hidden World/Timer/Stopwatch fragments
+    // (and a running countdown) are not destroyed while editing an alarm.
     private void edit(int id) {
         getParentFragmentManager().beginTransaction()
-                .replace(R.id.fragment_container, CrudFragment.newInstance(id))
+                .add(R.id.fragment_container, CrudFragment.newInstance(id))
                 .addToBackStack(null)
                 .commit();
     }

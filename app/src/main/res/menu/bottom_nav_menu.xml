@@ -1,6 +1,6 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
-    <item android:id="@+id/nav_alarm" android:icon="@android:drawable/ic_lock_idle_alarm" android:title="Alarm" />
-    <item android:id="@+id/nav_world" android:icon="@android:drawable/ic_menu_compass" android:title="World" />
-    <item android:id="@+id/nav_timer" android:icon="@android:drawable/ic_popup_sync" android:title="Timer" />
-    <item android:id="@+id/nav_stopwatch" android:icon="@android:drawable/ic_menu_recent_history" android:title="Stopwatch" />
+    <item android:id="@+id/nav_alarm" android:icon="@drawable/ic_nav_alarm" android:title="Alarm" />
+    <item android:id="@+id/nav_world" android:icon="@drawable/ic_nav_world" android:title="World" />
+    <item android:id="@+id/nav_timer" android:icon="@drawable/ic_nav_timer" android:title="Timer" />
+    <item android:id="@+id/nav_stopwatch" android:icon="@drawable/ic_nav_stopwatch" android:title="Stopwatch" />
 </menu>

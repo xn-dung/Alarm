@@ -1,5 +1,6 @@
 package com.example.myapplication.Activities;
 
+import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
@@ -8,6 +9,7 @@ import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.activity.OnBackPressedCallback;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.myapplication.Model.Alarm;
@@ -39,6 +41,13 @@ public class AlarmActivity extends AppCompatActivity {
         
         boolean needsMath = alarm != null && alarm.getDismissMode() == 1;
         math.setVisibility(needsMath ? View.VISIBLE : View.GONE);
+
+        getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
+            @Override
+            public void handleOnBackPressed() {
+                // A ringing alarm can only be dismissed or snoozed from its controls.
+            }
+        });
         
         if (needsMath) {
             generateMathProblem();
@@ -88,6 +97,7 @@ public class AlarmActivity extends AppCompatActivity {
         finish();
     }
 
+    @SuppressLint({"MissingSuperCall", "GestureBackNavigation"})
     @Override
     public void onBackPressed() {
         // Trống để vô hiệu hóa nút back cứng khi báo thức đang kêu

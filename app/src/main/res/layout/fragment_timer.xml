@@ -3,23 +3,15 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:background="@color/bg_dark"
+    android:background="@drawable/bg_app_gradient"
     android:paddingHorizontal="20dp"
     android:paddingTop="14dp">
-
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Timer"
-        android:textColor="@color/text_primary"
-        android:textSize="34sp"
-        android:textStyle="bold" />
 
     <LinearLayout
         android:id="@+id/layout_pickers"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="20dp"
+        android:layout_marginTop="8dp"
         android:gravity="center"
         android:orientation="horizontal"
         android:background="@drawable/bg_card"
@@ -108,7 +100,7 @@
             android:background="@drawable/bg_button_primary"
             android:text="Start"
             android:textAllCaps="false"
-            android:textColor="#1A1226"
+            android:textColor="@color/primary_button_text"
             android:textStyle="bold" />
     </LinearLayout>
 

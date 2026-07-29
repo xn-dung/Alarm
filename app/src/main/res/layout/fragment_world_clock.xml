@@ -1,7 +1,7 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/bg_dark"
+    android:background="@drawable/bg_app_gradient"
     android:orientation="vertical"
     android:paddingHorizontal="20dp"
     android:paddingTop="14dp">
@@ -11,14 +11,10 @@
         android:layout_height="wrap_content"
         android:gravity="center_vertical">
 
-        <TextView
+        <Space
             android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:text="World Clock"
-            android:textColor="@color/text_primary"
-            android:textSize="30sp"
-            android:textStyle="bold" />
+            android:layout_height="1dp"
+            android:layout_weight="1" />
 
         <TextView
             android:id="@+id/btn_manage_world"

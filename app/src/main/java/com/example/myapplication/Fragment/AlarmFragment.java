@@ -1,5 +1,6 @@
 package com.example.myapplication.Fragment;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.TextView;
@@ -10,6 +11,7 @@ import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.example.myapplication.Activities.AlarmEditorActivity;
 import com.example.myapplication.Adapter.AlarmAdapter;
 import com.example.myapplication.DAO.AlarmDao;
 import com.example.myapplication.Model.Alarm;
@@ -39,20 +41,7 @@ public class AlarmFragment extends Fragment {
         list.setAdapter(adapter);
         
         view.findViewById(R.id.quick_add).setOnClickListener(v -> edit(-1));
-        getParentFragmentManager().addOnBackStackChangedListener(reload);
         load();
-    }
-
-    // Reloads the list when CrudFragment pops; onResume no longer fires for that
-    // since the edit screen is added on top instead of replacing this fragment.
-    private final androidx.fragment.app.FragmentManager.OnBackStackChangedListener reload = () -> {
-        if (getView() != null) load();
-    };
-
-    @Override
-    public void onDestroyView() {
-        getParentFragmentManager().removeOnBackStackChangedListener(reload);
-        super.onDestroyView();
     }
 
     @Override
@@ -111,13 +100,10 @@ public class AlarmFragment extends Fragment {
         }
     }
 
-    // add() instead of replace() so the hidden World/Timer/Stopwatch fragments
-    // (and a running countdown) are not destroyed while editing an alarm.
     private void edit(int id) {
-        getParentFragmentManager().beginTransaction()
-                .add(R.id.fragment_container, CrudFragment.newInstance(id))
-                .addToBackStack(null)
-                .commit();
+        Intent intent = new Intent(requireContext(), AlarmEditorActivity.class);
+        intent.putExtra(AlarmEditorActivity.EXTRA_ALARM_ID, id);
+        startActivity(intent);
     }
 
     private void setEnabled(Alarm alarm) {

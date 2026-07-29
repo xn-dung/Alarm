@@ -1,17 +1,34 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <!-- Light palette: calm One UI-inspired neutrals with an indigo accent. -->
     <color name="black">#FF000000</color>
-    <color name="text_primary">#F6F7FB</color>
-    <color name="text_secondary">#9AA0B2</color>
-    <color name="text_disabled">#646B7A</color>
-    <color name="bg_dark">#101217</color>
-    <color name="bg_card">#1B1F28</color>
-    <color name="bg_nav">#171A21</color>
-    <color name="purple_accent">#A9B8FF</color>
-    <color name="purple_light">#C5D0FF</color>
-    <color name="switch_track_off">#343946</color>
-    <color name="divider">#2B303B</color>
-    <color name="teal_200">#A9B8FF</color>
-    <color name="accent_warm">#FFB69D</color>
-    <color name="accent_mint">#9BE6C6</color>
+    <color name="text_primary">#171A21</color>
+    <color name="text_secondary">#656C79</color>
+    <color name="text_disabled">#989FAA</color>
+
+    <color name="bg_app">#FFFFFFFF</color>
+    <color name="bg_card">#FFFFFFFF</color>
+    <color name="bg_nav">#F1FAF7</color>
+    <color name="bg_nav_floating">#F5FFFFFF</color>
+    <color name="button_secondary_bg">#EAF3F0</color>
+    <color name="circle_time_bg">#EEF8F4</color>
+    <color name="icon_button_bg">#E6F3EF</color>
+
+    <color name="nav_stroke">#BFDCCF</color>
+    <color name="nav_active_indicator">#D4F1E7</color>
+    <color name="nav_ripple">#24257D70</color>
+
+    <color name="purple_accent">#257D70</color>
+    <color name="purple_light">#257D70</color>
+    <color name="primary_button_text">#FFFFFFFF</color>
+    <color name="switch_track_off">#C9CED8</color>
+    <color name="divider">#DCEAE5</color>
+    <color name="teal_200">#257D70</color>
+    <color name="accent_warm">#C85C42</color>
+    <color name="accent_mint">#258766</color>
+
+    <color name="next_alarm_start">#FFFFFFFF</color>
+    <color name="next_alarm_center">#FFF0FAF6</color>
+    <color name="next_alarm_end">#FFDEF4EC</color>
+    <color name="next_alarm_stroke">#C4E5D9</color>
 </resources>

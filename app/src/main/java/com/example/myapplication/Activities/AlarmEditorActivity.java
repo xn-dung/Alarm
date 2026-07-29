@@ -1,11 +1,10 @@
-package com.example.myapplication.Fragment;
+package com.example.myapplication.Activities;
 
 import android.app.AlertDialog;
 import android.content.Intent;
-import android.graphics.Color;
-import android.graphics.Paint;
 import android.media.MediaPlayer;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
@@ -19,10 +18,10 @@ import android.widget.TextView;
 
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
-import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.SwitchCompat;
-import androidx.fragment.app.Fragment;
+import androidx.core.content.ContextCompat;
 
 import com.example.myapplication.DAO.AlarmDao;
 import com.example.myapplication.Model.Alarm;
@@ -32,7 +31,9 @@ import com.example.myapplication.Util.AlarmScheduler;
 import java.util.Calendar;
 import java.util.Locale;
 
-public class CrudFragment extends Fragment {
+public class AlarmEditorActivity extends AppCompatActivity {
+    public static final String EXTRA_ALARM_ID = "alarm_id";
+
     private int id;
     private Alarm alarm;
     private AlarmDao dao;
@@ -50,24 +51,12 @@ public class CrudFragment extends Fragment {
     private final Handler previewHandler = new Handler(Looper.getMainLooper());
     private final Runnable stopPreview = this::stopPreview;
 
-    public CrudFragment() {
-        super(R.layout.fragment_add_edit_alarm);
-    }
-
-    public static CrudFragment newInstance(int id) {
-        CrudFragment fragment = new CrudFragment();
-        Bundle bundle = new Bundle();
-        bundle.putInt("id", id);
-        fragment.setArguments(bundle);
-        return fragment;
-    }
-
     private final ActivityResultLauncher<Intent> musicPicker = registerForActivityResult(
             new ActivityResultContracts.StartActivityForResult(), result -> {
                 if (result.getData() == null || result.getData().getData() == null) return;
                 Uri uri = result.getData().getData();
                 try {
-                    requireContext().getContentResolver().takePersistableUriPermission(uri, Intent.FLAG_GRANT_READ_URI_PERMISSION);
+                    getContentResolver().takePersistableUriPermission(uri, Intent.FLAG_GRANT_READ_URI_PERMISSION);
                 } catch (Exception ignored) {
                 }
                 alarm.setMusicUri(uri.toString());
@@ -76,28 +65,25 @@ public class CrudFragment extends Fragment {
     );
 
     @Override
-    public void onCreate(@Nullable Bundle state) {
+    protected void onCreate(@Nullable Bundle state) {
         super.onCreate(state);
-        id = getArguments() == null ? -1 : getArguments().getInt("id", -1);
-    }
-
-    @Override
-    public void onViewCreated(@NonNull View view, @Nullable Bundle state) {
-        dao = new AlarmDao(requireContext());
-        hour = view.findViewById(R.id.picker_hour);
-        minute = view.findViewById(R.id.picker_minute);
-        name = view.findViewById(R.id.et_name);
-        melody = view.findViewById(R.id.row_melody);
-        volume = view.findViewById(R.id.seek_volume);
-        random = view.findViewById(R.id.switch_random);
-        loop = view.findViewById(R.id.switch_loop);
-        vibrate = view.findViewById(R.id.switch_vibrate);
-        challenge = view.findViewById(R.id.spinner_challenge);
+        setContentView(R.layout.activity_alarm_editor);
+        id = getIntent().getIntExtra(EXTRA_ALARM_ID, -1);
+        dao = new AlarmDao(this);
+        hour = findViewById(R.id.picker_hour);
+        minute = findViewById(R.id.picker_minute);
+        name = findViewById(R.id.et_name);
+        melody = findViewById(R.id.row_melody);
+        volume = findViewById(R.id.seek_volume);
+        random = findViewById(R.id.switch_random);
+        loop = findViewById(R.id.switch_loop);
+        vibrate = findViewById(R.id.switch_vibrate);
+        challenge = findViewById(R.id.spinner_challenge);
         days = new CheckBox[]{
-                view.findViewById(R.id.day_mon), view.findViewById(R.id.day_tue),
-                view.findViewById(R.id.day_wed), view.findViewById(R.id.day_thu),
-                view.findViewById(R.id.day_fri), view.findViewById(R.id.day_sat),
-                view.findViewById(R.id.day_sun)
+                findViewById(R.id.day_mon), findViewById(R.id.day_tue),
+                findViewById(R.id.day_wed), findViewById(R.id.day_thu),
+                findViewById(R.id.day_fri), findViewById(R.id.day_sat),
+                findViewById(R.id.day_sun)
         };
 
         hour.setMinValue(0);
@@ -109,10 +95,12 @@ public class CrudFragment extends Fragment {
         style(hour);
         style(minute);
 
-        for (CheckBox day : days) day.setTextColor(Color.WHITE);
+        int primaryTextColor = ContextCompat.getColor(this, R.color.text_primary);
+        for (CheckBox day : days) day.setTextColor(primaryTextColor);
         challenge.post(() -> {
             if (challenge.getSelectedView() instanceof TextView) {
-                ((TextView) challenge.getSelectedView()).setTextColor(Color.WHITE);
+                ((TextView) challenge.getSelectedView()).setTextColor(
+                        ContextCompat.getColor(this, R.color.text_primary));
             }
         });
 
@@ -120,11 +108,15 @@ public class CrudFragment extends Fragment {
         hour.setValue(calendar.get(Calendar.HOUR_OF_DAY));
         minute.setValue(calendar.get(Calendar.MINUTE));
         alarm = id < 0 ? new Alarm() : dao.getAlarmbyId(id);
+        if (alarm == null) {
+            id = -1;
+            alarm = new Alarm();
+        }
         bind();
 
-        view.findViewById(R.id.btn_close).setOnClickListener(v -> getParentFragmentManager().popBackStack());
-        view.findViewById(R.id.btn_save).setOnClickListener(v -> save());
-        view.findViewById(R.id.btn_delete).setOnClickListener(v -> delete());
+        findViewById(R.id.btn_close).setOnClickListener(v -> finish());
+        findViewById(R.id.btn_save).setOnClickListener(v -> save());
+        findViewById(R.id.btn_delete).setOnClickListener(v -> delete());
         melody.setOnClickListener(v -> sounds());
     }
 
@@ -142,24 +134,21 @@ public class CrudFragment extends Fragment {
         for (int i = 0; i < picker.getChildCount(); i++) {
             if (!(picker.getChildAt(i) instanceof EditText)) continue;
             EditText input = (EditText) picker.getChildAt(i);
-            input.setTextColor(Color.WHITE);
+            input.setTextColor(ContextCompat.getColor(this, R.color.text_primary));
             input.setTextSize(27);
             input.setTypeface(android.graphics.Typeface.DEFAULT_BOLD);
             input.setAlpha(1f);
         }
-        try {
-            java.lang.reflect.Field field = NumberPicker.class.getDeclaredField("mSelectorWheelPaint");
-            field.setAccessible(true);
-            ((Paint) field.get(picker)).setColor(Color.WHITE);
-            picker.invalidate();
-        } catch (Exception ignored) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            picker.setTextColor(ContextCompat.getColor(this, R.color.text_primary));
         }
+        picker.invalidate();
     }
 
     private void bind() {
         if (id >= 0) {
-            getView().findViewById(R.id.btn_delete).setVisibility(View.VISIBLE);
-            ((TextView) getView().findViewById(R.id.tv_title)).setText("Edit alarm");
+            findViewById(R.id.btn_delete).setVisibility(View.VISIBLE);
+            ((TextView) findViewById(R.id.tv_title)).setText("Edit alarm");
         }
         hour.setValue(alarm.getHour());
         minute.setValue(alarm.getMinute());
@@ -178,7 +167,7 @@ public class CrudFragment extends Fragment {
     private void sounds() {
         String[] sounds = {"Aurora", "Daybreak", "Pulse", "Breeze", "Orbit"};
         int[] selected = {alarm.getMusicId()};
-        new AlertDialog.Builder(requireContext())
+        new AlertDialog.Builder(this)
                 .setTitle("Preview alarm sounds")
                 .setSingleChoiceItems(sounds, selected[0], (dialog, which) -> {
                     selected[0] = which;
@@ -218,7 +207,7 @@ public class CrudFragment extends Fragment {
         stopPreview();
         try {
             int[] sounds = {R.raw.alarm1, R.raw.alarm2, R.raw.alarm3, R.raw.alarm4, R.raw.alarm5};
-            preview = MediaPlayer.create(requireContext(), sounds[index]);
+            preview = MediaPlayer.create(this, sounds[index]);
             if (preview == null) return;
             preview.setVolume(.45f, .45f);
             preview.start();
@@ -258,19 +247,21 @@ public class CrudFragment extends Fragment {
 
         if (id < 0) alarm.setId((int) dao.insertAlarm(alarm));
         else dao.updateAlarm(alarm);
-        AlarmScheduler.schedule(requireContext(), alarm);
-        getParentFragmentManager().popBackStack();
+        AlarmScheduler.schedule(this, alarm);
+        setResult(RESULT_OK);
+        finish();
     }
 
     private void delete() {
-        AlarmScheduler.cancel(requireContext(), id);
+        AlarmScheduler.cancel(this, id);
         dao.deleteAlarm(id);
-        getParentFragmentManager().popBackStack();
+        setResult(RESULT_OK);
+        finish();
     }
 
     @Override
-    public void onDestroyView() {
+    protected void onDestroy() {
         stopPreview();
-        super.onDestroyView();
+        super.onDestroy();
     }
 }

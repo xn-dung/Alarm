@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Dark palette keeps the existing character while matching system night mode. -->
+    <color name="text_primary">#F6F7FB</color>
+    <color name="text_secondary">#9AA0B2</color>
+    <color name="text_disabled">#646B7A</color>
+
+    <color name="bg_app">#08131F</color>
+    <color name="bg_card">#E6162231</color>
+    <color name="bg_nav">#08131F</color>
+    <color name="bg_nav_floating">#F21A2433</color>
+    <color name="button_secondary_bg">#293347</color>
+    <color name="circle_time_bg">#1B2839</color>
+    <color name="icon_button_bg">#243147</color>
+
+    <color name="nav_stroke">#584B6C</color>
+    <color name="nav_active_indicator">#50436A</color>
+    <color name="nav_ripple">#32D8CAFF</color>
+
+    <color name="purple_accent">#C9B9F8</color>
+    <color name="purple_light">#D8CAFF</color>
+    <color name="primary_button_text">#1A1226</color>
+    <color name="switch_track_off">#343946</color>
+    <color name="divider">#39455A</color>
+    <color name="teal_200">#C9B9F8</color>
+    <color name="accent_warm">#FFB69D</color>
+    <color name="accent_mint">#9BE6C6</color>
+
+    <color name="next_alarm_start">#172538</color>
+    <color name="next_alarm_center">#292A46</color>
+    <color name="next_alarm_end">#493B5A</color>
+    <color name="next_alarm_stroke">#66577A</color>
+</resources>

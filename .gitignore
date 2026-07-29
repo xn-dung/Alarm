@@ -19,6 +19,7 @@ output-metadata.json
 # IntelliJ
 *.iml
 .idea/
+.cph/
 misc.xml
 deploymentTargetDropDown.xml
 render.experimental.xml

@@ -1,1 +1,94 @@
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android" android:layout_width="match_parent" android:layout_height="match_parent" android:background="@color/bg_dark"><LinearLayout android:layout_width="match_parent" android:layout_height="match_parent" android:orientation="vertical" android:paddingHorizontal="20dp" android:paddingTop="14dp"><LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:gravity="center_vertical"><LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:orientation="vertical"><TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Alarms" android:textColor="@color/text_primary" android:textSize="34sp" android:textStyle="bold"/><TextClock android:layout_width="wrap_content" android:layout_height="wrap_content" android:format12Hour="EEE, h:mm a" android:format24Hour="EEE, HH:mm" android:textColor="@color/text_secondary" android:textSize="15sp"/></LinearLayout><TextView android:id="@+id/quick_add" android:layout_width="42dp" android:layout_height="42dp" android:background="@drawable/bg_icon_button" android:gravity="center" android:text="+" android:textColor="@color/text_primary" android:textSize="28sp"/></LinearLayout><LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="18dp" android:background="@drawable/bg_next_alarm" android:orientation="vertical" android:padding="20dp"><TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="NEXT ALARM" android:textColor="@color/purple_light" android:textSize="12sp" android:textStyle="bold"/><TextView android:id="@+id/tv_next_time" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="5dp" android:text="No alarm set" android:textColor="@color/text_primary" android:textSize="27sp" android:textStyle="bold"/><TextView android:id="@+id/tv_next_detail" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Add one and let us wake you gently" android:textColor="@color/text_secondary" android:textSize="14sp"/></LinearLayout><TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="22dp" android:text="Your alarms" android:textColor="@color/text_primary" android:textSize="19sp" android:textStyle="bold"/><androidx.recyclerview.widget.RecyclerView android:id="@+id/rv_alarms" android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1" android:layout_marginTop="10dp" android:clipToPadding="false" android:paddingBottom="20dp"/></LinearLayout></FrameLayout>
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/bg_app_gradient">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:paddingHorizontal="20dp"
+        android:paddingTop="10dp">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center_vertical">
+
+            <TextClock
+                android:layout_width="0dp"
+                android:layout_height="42dp"
+                android:layout_weight="1"
+                android:format12Hour="EEE, h:mm a"
+                android:format24Hour="EEE, HH:mm"
+                android:gravity="center_vertical"
+                android:textColor="@color/text_secondary"
+                android:textSize="15sp" />
+
+            <TextView
+                android:id="@+id/quick_add"
+                android:layout_width="42dp"
+                android:layout_height="42dp"
+                android:background="@drawable/bg_icon_button"
+                android:contentDescription="Add alarm"
+                android:gravity="center"
+                android:text="+"
+                android:textColor="@color/text_primary"
+                android:textSize="28sp" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="14dp"
+            android:background="@drawable/bg_next_alarm"
+            android:orientation="vertical"
+            android:padding="20dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="NEXT ALARM"
+                android:textColor="@color/purple_light"
+                android:textSize="12sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/tv_next_time"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="5dp"
+                android:text="No alarm set"
+                android:textColor="@color/text_primary"
+                android:textSize="27sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/tv_next_detail"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Add one and let us wake you gently"
+                android:textColor="@color/text_secondary"
+                android:textSize="14sp" />
+        </LinearLayout>
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="22dp"
+            android:text="Your alarms"
+            android:textColor="@color/text_primary"
+            android:textSize="19sp"
+            android:textStyle="bold" />
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/rv_alarms"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_marginTop="10dp"
+            android:layout_weight="1"
+            android:clipToPadding="false"
+            android:paddingBottom="20dp" />
+    </LinearLayout>
+</FrameLayout>

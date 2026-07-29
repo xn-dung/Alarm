@@ -3,22 +3,14 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:background="@color/bg_dark"
+    android:background="@drawable/bg_app_gradient"
     android:paddingHorizontal="20dp"
     android:paddingTop="14dp">
-
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Stopwatch"
-        android:textColor="@color/text_primary"
-        android:textSize="34sp"
-        android:textStyle="bold" />
 
     <FrameLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="30dp">
+        android:layout_marginTop="16dp">
 
         <View
             android:layout_width="280dp"
@@ -63,7 +55,7 @@
             android:background="@drawable/bg_button_primary"
             android:text="Start"
             android:textAllCaps="false"
-            android:textColor="#1A1226"
+            android:textColor="@color/primary_button_text"
             android:textStyle="bold" />
     </LinearLayout>
 </LinearLayout>

@@ -2,7 +2,7 @@
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/bg_dark"
+    android:background="@drawable/bg_app_gradient"
     android:padding="32dp">
 
     <TextClock
@@ -54,7 +54,7 @@
             android:hint="Enter answer"
             android:inputType="number"
             android:textColor="@color/text_primary"
-            android:textColorHint="@color/text_primary" />
+            android:textColorHint="@color/text_secondary" />
     </LinearLayout>
 
     <Button
@@ -74,7 +74,7 @@
         android:layout_width="160dp"
         android:backgroundTint="@color/teal_200"
         android:text="DISMISS"
-        android:textColor="@android:color/white"
+        android:textColor="@color/primary_button_text"
         android:textSize="20sp" />
 
 </RelativeLayout>

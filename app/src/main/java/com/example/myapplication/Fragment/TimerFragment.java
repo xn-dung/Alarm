@@ -6,7 +6,6 @@ import android.media.AudioAttributes;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.net.Uri;
-import android.os.Build;
 import android.os.CountDownTimer;
 import android.view.View;
 import android.widget.Button;
@@ -16,7 +15,6 @@ import android.widget.TextView;
 
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
-import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -25,6 +23,7 @@ import com.example.myapplication.Adapter.RecentTimerAdapter;
 import com.example.myapplication.Database.TimerRecentDatabase;
 import com.example.myapplication.Model.RecentTimer;
 import com.example.myapplication.R;
+import com.example.myapplication.Util.NumberPickerStyler;
 import com.example.myapplication.Util.TimerScheduler;
 
 import java.util.List;
@@ -87,7 +86,7 @@ public class TimerFragment extends Fragment {
             picker.setMinValue(0);
             picker.setMaxValue(picker == hours ? 23 : 59);
             picker.setFormatter(value -> String.format(Locale.getDefault(), "%02d", value));
-            style(picker);
+            NumberPickerStyler.apply(picker);
         }
 
         showRecent();
@@ -147,31 +146,6 @@ public class TimerFragment extends Fragment {
         minutes.setValue((int) ((value / 60) % 60));
         seconds.setValue((int) (value % 60));
         name.setText(timer.getName());
-    }
-
-    private void style(NumberPicker picker) {
-        picker.postDelayed(() -> applyPickerColor(picker), 80);
-        picker.setOnValueChangedListener((view, oldValue, newValue) -> view.postDelayed(() -> applyPickerColor(view), 40));
-        picker.setOnScrollListener((view, scrollState) -> {
-            if (scrollState == NumberPicker.OnScrollListener.SCROLL_STATE_IDLE) {
-                view.postDelayed(() -> applyPickerColor(view), 80);
-            }
-        });
-    }
-
-    private void applyPickerColor(NumberPicker picker) {
-        for (int i = 0; i < picker.getChildCount(); i++) {
-            if (!(picker.getChildAt(i) instanceof EditText)) continue;
-            EditText input = (EditText) picker.getChildAt(i);
-            input.setTextColor(ContextCompat.getColor(requireContext(), R.color.text_primary));
-            input.setTextSize(27);
-            input.setTypeface(android.graphics.Typeface.DEFAULT_BOLD);
-            input.setAlpha(1f);
-        }
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            picker.setTextColor(ContextCompat.getColor(requireContext(), R.color.text_primary));
-        }
-        picker.invalidate();
     }
 
     private void sounds() {

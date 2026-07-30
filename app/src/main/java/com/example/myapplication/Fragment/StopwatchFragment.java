@@ -62,6 +62,7 @@ public class StopwatchFragment extends Fragment {
                 timeSwapBuff += timeInMilliseconds;
                 updateTime = timeSwapBuff;
                 handler.removeCallbacks(updateTimerThread);
+                tvStopwatch.setText(formatTime(updateTime));
                 btnStartPause.setText("Start");
                 btnLap.setEnabled(false);
                 isRunning = false;

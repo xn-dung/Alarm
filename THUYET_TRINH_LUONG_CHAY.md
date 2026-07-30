@@ -396,16 +396,20 @@ Stopwatch chạy bằng:
 - `SystemClock.uptimeMillis()` để lấy thời gian ổn định.
 - `Handler` chạy trên main thread.
 - `Runnable` cập nhật giao diện mỗi 10ms.
+- Nút `Lap` ghi thời gian riêng của từng vòng vào danh sách phía dưới.
 
 ### Bảng các hàm/callback
 
 | Hàm/callback | Chức năng |
 |---|---|
 | `updateTimerThread.run()` | Tính thời gian từ `startTime`, cộng phần đã chạy trước khi Pause (`timeSwapBuff`), đổi sang phút/giây/phần trăm giây, cập nhật TextView, tự đăng ký chạy lại sau 10ms |
-| `onCreateView()` | Inflate layout, ánh xạ TextView và hai button, đăng ký callback Start/Pause và Reset |
-| Callback Start khi chưa chạy | Lưu `startTime`, chạy Runnable, đổi text thành Pause và đặt `isRunning = true` |
-| Callback Pause | Cộng thời gian phiên hiện tại vào `timeSwapBuff`, xóa Runnable, đổi text thành Start và đặt `isRunning = false` |
-| Callback Reset | Đặt toàn bộ biến thời gian về 0, hiển thị `00:00.00`; nếu đang chạy thì dừng Runnable |
+| `onCreateView()` | Inflate layout, ánh xạ đồng hồ, ba nút và danh sách Lap; đăng ký callback |
+| Callback Start khi chưa chạy | Lưu `startTime`, chạy Runnable, đổi text thành Pause, bật nút Lap và đặt `isRunning = true` |
+| Callback Pause | Cộng chính xác thời gian phiên hiện tại vào `timeSwapBuff`, xóa Runnable, tắt nút Lap và đặt `isRunning = false` |
+| `recordLap()` | Tính tổng thời gian hiện tại, trừ `lastLapTime` để lấy thời gian vòng mới, inflate `item_stopwatch_lap` rồi thêm vào danh sách |
+| `formatTime(long)` | Đổi milliseconds thành chuỗi `mm:ss.SS` |
+| Callback Reset | Dừng Runnable, đưa biến về 0, xóa toàn bộ item Lap và ẩn danh sách |
+| `onDestroyView()` | Xóa callback để không tiếp tục cập nhật một View đã bị hủy |
 
 ### Ý nghĩa các biến thời gian
 
@@ -415,6 +419,8 @@ Stopwatch chạy bằng:
 | `timeInMilliseconds` | Thời gian đã chạy từ `startTime` của phiên hiện tại |
 | `timeSwapBuff` | Tổng thời gian tích lũy từ các phiên trước khi Pause |
 | `updateTime` | Tổng cuối cùng = `timeSwapBuff + timeInMilliseconds` |
+| `lastLapTime` | Tổng thời gian tại lần bấm Lap trước |
+| `lapCount` | Số thứ tự Lap tiếp theo |
 
 ### Luồng Start → Pause → Resume
 
@@ -430,6 +436,12 @@ Pause
 Resume
     -> startTime = uptimeMillis() mới
     -> updateTime = timeSwapBuff + thời gian của phiên mới
+
+Lap
+    -> totalTime = timeSwapBuff + thời gian phiên hiện tại
+    -> lapTime = totalTime - lastLapTime
+    -> tăng lapCount
+    -> thêm "Lap n — mm:ss.SS" xuống danh sách
 ```
 
 ---
@@ -2917,7 +2929,30 @@ Resume:
 
 ### Flow Reset
 
-Đặt toàn bộ biến thời gian về 0, đổi text thành `00:00.00`, dừng callback nếu đang chạy.
+Đặt toàn bộ biến thời gian và số vòng về 0, đổi text thành `00:00.00`, dừng callback, xóa danh sách Lap và tắt nút Lap.
+
+### Flow Lap
+
+```text
+Người dùng nhấn Lap khi Stopwatch đang chạy
+    -> StopwatchFragment.recordLap()
+    -> tính totalTime hiện tại
+    -> lapTime = totalTime - lastLapTime
+    -> lapCount++
+    -> inflate item_stopwatch_lap.xml
+    -> hiển thị Lap 1, Lap 2, Lap 3...
+    -> tự cuộn danh sách xuống vòng mới nhất
+```
+
+Ví dụ:
+
+```text
+Lap 1 tại 00:10.00 -> vòng 1 = 00:10.00
+Lap 2 tại 00:25.50 -> vòng 2 = 00:15.50
+Lap 3 tại 00:41.00 -> vòng 3 = 00:15.50
+```
+
+Thời gian Pause không được cộng vào vòng tiếp theo vì `totalTime` chỉ gồm các khoảng Stopwatch thực sự chạy.
 
 Stopwatch chỉ giữ trạng thái trong bộ nhớ Fragment, không lưu SQLite.
 

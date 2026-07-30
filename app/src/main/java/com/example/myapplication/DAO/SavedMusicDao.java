@@ -27,4 +27,11 @@ public class SavedMusicDao {
     public List<SavedMusic> getAll() {
         return db.getAllSavedMusic();
     }
+
+    public int deleteAndResetAlarms(SavedMusic music) {
+        if (music == null) {
+            return 0;
+        }
+        return db.deleteSavedMusicAndResetAlarms(music.getUri());
+    }
 }

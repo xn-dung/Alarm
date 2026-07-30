@@ -16,6 +16,7 @@ import android.widget.NumberPicker;
 import android.widget.SeekBar;
 import android.widget.Spinner;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
@@ -30,13 +31,13 @@ import com.example.myapplication.Model.Alarm;
 import com.example.myapplication.Model.SavedMusic;
 import com.example.myapplication.R;
 import com.example.myapplication.Util.AlarmScheduler;
+import com.example.myapplication.Util.MusicUriHelper;
 import com.example.myapplication.Util.NumberPickerStyler;
 
 import java.util.Calendar;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
-import java.util.Random;
 
 public class AlarmEditorActivity extends AppCompatActivity {
     public static final String EXTRA_ALARM_ID = "alarm_id";
@@ -182,11 +183,18 @@ public class AlarmEditorActivity extends AppCompatActivity {
         new AlertDialog.Builder(this)
                 .setTitle("Preview alarm sounds")
                 .setSingleChoiceItems(choices.toArray(new String[0]), selected[0], (dialog, which) -> {
-                    selected[0] = which;
                     if (which < BUILT_IN_SOUND_NAMES.length) {
+                        selected[0] = which;
                         play(which);
                     } else {
-                        play(savedMusic.get(which - BUILT_IN_SOUND_NAMES.length).getUri());
+                        SavedMusic music = savedMusic.get(which - BUILT_IN_SOUND_NAMES.length);
+                        if (!MusicUriHelper.isReadable(this, music.getUri())) {
+                            removeMissingMusic(music);
+                            dialog.dismiss();
+                            return;
+                        }
+                        selected[0] = which;
+                        play(music.getUri());
                     }
                 })
                 .setNeutralButton("Add device audio", (dialog, which) -> pickMusic())
@@ -201,6 +209,10 @@ public class AlarmEditorActivity extends AppCompatActivity {
                         alarm.setMusicId(selected[0]);
                     } else {
                         SavedMusic music = savedMusic.get(selected[0] - BUILT_IN_SOUND_NAMES.length);
+                        if (!MusicUriHelper.isReadable(this, music.getUri())) {
+                            removeMissingMusic(music);
+                            return;
+                        }
                         alarm.setMusicUri(music.getUri());
                     }
                     if (id >= 0) {
@@ -259,7 +271,18 @@ public class AlarmEditorActivity extends AppCompatActivity {
         } catch (Exception ignored) {
             stopPreview();
         }
-        play(new Random().nextInt(BUILT_IN_SOUND_RESOURCES.length));
+        Toast.makeText(this, R.string.device_music_cannot_play, Toast.LENGTH_SHORT).show();
+    }
+
+    private void removeMissingMusic(SavedMusic music) {
+        stopPreview();
+        savedMusicDao.deleteAndResetAlarms(music);
+        if (music.getUri().equals(alarm.getMusicUri())) {
+            alarm.setMusicUri(null);
+            alarm.setMusicId(0);
+        }
+        Toast.makeText(this, R.string.device_music_not_found_removed, Toast.LENGTH_LONG).show();
+        showMelody();
     }
 
     private void startPreview() {

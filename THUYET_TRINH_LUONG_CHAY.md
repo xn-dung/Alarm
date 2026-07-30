@@ -142,10 +142,12 @@ Fragment Alarm mở Activity này bằng `Intent` và truyền `alarm_id`.
 | Callback `musicPicker` | Nhận URI, lấy tên file, giữ quyền đọc, lưu vào thư viện `saved_music`, gán cho Alarm; nếu đang edit thì update dòng Alarm ngay | `SavedMusicDao.save()`, `Alarm.setMusicUri()`, `AlarmDao.updateAlarm()` |
 | `onCreate(Bundle state)` | Nạp layout, lấy `alarm_id`, tạo DAO, ánh xạ toàn bộ View, cấu hình NumberPicker, tạo hoặc đọc Model Alarm, bind dữ liệu và gắn listener cho Close/Save/Delete/Sound | `AlarmDao.getAlarmbyId()`, `bind()`, `NumberPickerStyler.apply()`, `save()`, `delete()`, `sounds()` |
 | `bind()` | Đưa dữ liệu từ Model `alarm` lên giao diện. Nếu là edit thì hiện nút Delete và đổi title. Tick các ngày lặp dựa trên `repeatDays` | Gọi các getter của `Alarm` và `showMelody()` |
-| `sounds()` | Ghép 5 nhạc mặc định với toàn bộ `SavedMusic`; click để preview, chọn lại URI đã lưu hoặc thêm file mới | `SavedMusicDao.getAll()`, `play()`, `pickMusic()` |
+| `sounds()` | Ghép 5 nhạc mặc định với toàn bộ `SavedMusic`; khi chọn bài thiết bị thì kiểm tra URI trước khi preview. Nếu file mất, hiện Toast, xóa bài và đóng hộp thoại | `SavedMusicDao.getAll()`, `MusicUriHelper.isReadable()`, `removeMissingMusic()`, `play()`, `pickMusic()` |
 | `showMelody()` | Hiển thị tên nhạc mặc định hoặc tên file tương ứng với `musicUri` trong thư viện | `SavedMusicDao.getAll()` |
 | `pickMusic()` | Tạo `Intent.ACTION_OPEN_DOCUMENT` với MIME `audio/*`, cho phép chọn một file âm thanh và giữ quyền đọc | Gọi `musicPicker.launch(intent)` |
 | `play(int index)` | Dừng preview cũ, tạo `MediaPlayer` từ một trong 5 file `R.raw.alarm1..5`, giảm volume preview, phát và lên lịch tự dừng | Android `MediaPlayer`; `previewHandler.postDelayed()` |
+| `play(String uri)` | Nghe thử URI đã kiểm tra; nếu player không tạo được thì báo file không thể phát, không phát ngẫu nhiên thay thế | Android `MediaPlayer`, `Toast` |
+| `removeMissingMusic(SavedMusic)` | Xóa bài URI hỏng khỏi thư viện, đưa Alarm liên quan về Aurora và báo cho người dùng | `SavedMusicDao.deleteAndResetAlarms()`, `Toast` |
 | `stopPreview()` | Xóa callback tự dừng, stop/release MediaPlayer và đặt `preview = null` | Android `MediaPlayer.stop()` và `release()` |
 | `save()` | Đọc toàn bộ giá trị UI vào Model. Ghép ngày lặp thành chuỗi số. Insert nếu ID < 0, update nếu đang sửa. Sau đó đặt lịch hệ thống, trả kết quả OK và đóng Activity | `AlarmDao.insertAlarm()`, `AlarmDao.updateAlarm()`, `AlarmScheduler.schedule()`, `finish()` |
 | `delete()` | Hủy lịch Android, xóa alarm trong SQLite, trả kết quả OK và đóng màn hình | `AlarmScheduler.cancel()`, `AlarmDao.deleteAlarm()`, `finish()` |
@@ -396,7 +398,7 @@ Stopwatch chạy bằng:
 - `SystemClock.uptimeMillis()` để lấy thời gian ổn định.
 - `Handler` chạy trên main thread.
 - `Runnable` cập nhật giao diện mỗi 10ms.
-- Nút `Lap` ghi thời gian riêng của từng vòng vào danh sách phía dưới.
+- Nút `Lap` ghi thời gian riêng của từng vòng và tổng thời gian vào bảng ba cột phía dưới.
 
 ### Bảng các hàm/callback
 
@@ -406,7 +408,7 @@ Stopwatch chạy bằng:
 | `onCreateView()` | Inflate layout, ánh xạ đồng hồ, ba nút và danh sách Lap; đăng ký callback |
 | Callback Start khi chưa chạy | Lưu `startTime`, chạy Runnable, đổi text thành Pause, bật nút Lap và đặt `isRunning = true` |
 | Callback Pause | Cộng chính xác thời gian phiên hiện tại vào `timeSwapBuff`, xóa Runnable, tắt nút Lap và đặt `isRunning = false` |
-| `recordLap()` | Tính tổng thời gian hiện tại, trừ `lastLapTime` để lấy thời gian vòng mới, inflate `item_stopwatch_lap` rồi thêm vào danh sách |
+| `recordLap()` | Tính `totalTime`, trừ `lastLapTime` để lấy `lapTime`, inflate item rồi điền ba cột `Lap`, `Lap time`, `Overall time` |
 | `formatTime(long)` | Đổi milliseconds thành chuỗi `mm:ss.SS` |
 | Callback Reset | Dừng Runnable, đưa biến về 0, xóa toàn bộ item Lap và ẩn danh sách |
 | `onDestroyView()` | Xóa callback để không tiếp tục cập nhật một View đã bị hủy |
@@ -685,6 +687,7 @@ AlarmFragment.load()
 | `SavedMusicDao(Context)` | Tạo `AlarmDatabaseHelper` |
 | `save(String name, String uri)` | Đổi tên, URI và thời điểm thêm thành `ContentValues`, sau đó insert/replace |
 | `getAll()` | Đọc toàn bộ thư viện, mới thêm gần nhất đứng trước |
+| `deleteAndResetAlarms(SavedMusic)` | Xóa URI hỏng khỏi thư viện và đưa mọi Alarm đang dùng URI đó về bài đầu tiên |
 
 Flow:
 
@@ -925,6 +928,7 @@ private static final int DATABASE_VERSION = 3;
 | `getAllAlarms()` | `AlarmDao.getAllAlarms()` | Query toàn bộ, sắp xếp theo giờ và phút tăng dần | `List<Alarm>` |
 | `insertSavedMusic(ContentValues)` | `SavedMusicDao.save()` | Insert/replace theo URI unique | ID dòng |
 | `getAllSavedMusic()` | `SavedMusicDao.getAll()` | Đọc thư viện theo `added_at DESC` | `List<SavedMusic>` |
+| `deleteSavedMusicAndResetAlarms(String)` | `SavedMusicDao.deleteAndResetAlarms()` | Trong một transaction: xóa URI khỏi `saved_music`, đặt `music_uri = null` và `music_id = 0` cho Alarm liên quan | Số bài đã xóa |
 | `onUpgrade(SQLiteDatabase, int, int)` | Android | Nâng schema cũ lên version mới | Không trả về |
 | `createSavedMusicTable(SQLiteDatabase)` | Nội bộ helper | Tạo bảng thư viện nếu chưa có | Không trả về |
 | `migrateExistingMusic(SQLiteDatabase)` | `onUpgrade()` | Đưa các `music_uri` cũ từ bảng alarm vào thư viện | Không trả về |
@@ -1428,7 +1432,15 @@ stop bài cũ
 
 Trong source hiện tại, `handler`, `stopRunnable` và `cancelTimer()` chưa được dùng để lên lịch tự dừng. Báo thức được dừng khi `AlarmActivity.dismiss()` dừng `AlarmService`, rồi `AlarmService.onDestroy()` gọi `musicHelper.stop()`.
 
-### 7.2.4. `NumberPickerStyler`
+### 7.2.4. `MusicUriHelper`
+
+| Hàm | Chức năng |
+|---|---|
+| `isReadable(Context, String)` | Parse URI và thử mở `ParcelFileDescriptor` ở chế độ đọc. Trả `false` nếu URI rỗng, file đã mất, quyền bị thu hồi hoặc Content Provider báo lỗi |
+
+Hàm dùng `try-with-resources` để descriptor luôn được đóng và không gọi `InputStream.available()`.
+
+### 7.2.5. `NumberPickerStyler`
 
 #### Vai trò
 
@@ -2496,16 +2508,18 @@ intent.addFlags(
 - Category yêu cầu nội dung có thể mở.
 - Flags cấp và cho phép giữ quyền đọc URI.
 
-Khi báo thức reo, `AlarmService` kiểm tra URI:
+Khi báo thức reo, `AlarmService` kiểm tra URI trước:
 
 ```java
-musicHelper.playFromUri(this, alarm.getMusicUri());
+if (MusicUriHelper.isReadable(this, alarm.getMusicUri())) {
+    musicHelper.playFromUri(this, alarm.getMusicUri());
+}
 if (!musicHelper.isPlaying()) {
-    musicHelper.playRandom(this);
+    musicHelper.playDefault(this);
 }
 ```
 
-Nếu file bị xóa, di chuyển hoặc nhà cung cấp URI không cho đọc nữa, Service phát ngẫu nhiên một trong năm file `res/raw`.
+Nếu file bị xóa, di chuyển, bị thu hồi quyền hoặc `MediaPlayer` vẫn không phát được, Service phát cố định `R.raw.alarm1` (Aurora).
 
 ## 13.9. Đặt lịch alarm và thông báo trước một phút
 
@@ -2940,16 +2954,19 @@ Người dùng nhấn Lap khi Stopwatch đang chạy
     -> lapTime = totalTime - lastLapTime
     -> lapCount++
     -> inflate item_stopwatch_lap.xml
-    -> hiển thị Lap 1, Lap 2, Lap 3...
+    -> cột Lap hiển thị Lap 1, Lap 2, Lap 3...
+    -> cột Lap time hiển thị thời gian riêng của vòng
+    -> cột Overall time hiển thị totalTime từ lúc Start
     -> tự cuộn danh sách xuống vòng mới nhất
 ```
 
 Ví dụ:
 
 ```text
-Lap 1 tại 00:10.00 -> vòng 1 = 00:10.00
-Lap 2 tại 00:25.50 -> vòng 2 = 00:15.50
-Lap 3 tại 00:41.00 -> vòng 3 = 00:15.50
+Lap       Lap time       Overall time
+Lap 1     00:10.00       00:10.00
+Lap 2     00:15.50       00:25.50
+Lap 3     00:15.50       00:41.00
 ```
 
 Thời gian Pause không được cộng vào vòng tiếp theo vì `totalTime` chỉ gồm các khoảng Stopwatch thực sự chạy.

@@ -166,6 +166,39 @@ public class AlarmDatabaseHelper extends SQLiteOpenHelper {
         return result;
     }
 
+    public int deleteSavedMusicAndResetAlarms(String uri) {
+        if (uri == null || uri.trim().isEmpty()) {
+            return 0;
+        }
+
+        SQLiteDatabase db = this.getWritableDatabase();
+        int rowsDeleted = 0;
+        db.beginTransaction();
+        try {
+            rowsDeleted = db.delete(
+                    AlarmContract.SavedMusicEntry.TABLE_NAME,
+                    AlarmContract.SavedMusicEntry.COLUMN_URI + "=?",
+                    new String[]{uri}
+            );
+
+            ContentValues fallbackSound = new ContentValues();
+            fallbackSound.putNull(AlarmContract.AlarmEntry.COLUMN_MUSIC_URI);
+            fallbackSound.put(AlarmContract.AlarmEntry.COLUMN_MUSIC_ID, 0);
+            db.update(
+                    AlarmContract.AlarmEntry.TABLE_NAME,
+                    fallbackSound,
+                    AlarmContract.AlarmEntry.COLUMN_MUSIC_URI + "=?",
+                    new String[]{uri}
+            );
+
+            db.setTransactionSuccessful();
+        } finally {
+            db.endTransaction();
+            db.close();
+        }
+        return rowsDeleted;
+    }
+
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion){
         if (oldVersion < 2) db.execSQL("ALTER TABLE " + AlarmContract.AlarmEntry.TABLE_NAME + " ADD COLUMN " + AlarmContract.AlarmEntry.COLUMN_DISMISS_MODE + " INTEGER DEFAULT 0");

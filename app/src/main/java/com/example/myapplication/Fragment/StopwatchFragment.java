@@ -19,7 +19,7 @@ import java.util.Locale;
 
 public class StopwatchFragment extends Fragment {
     private TextView tvStopwatch;
-    private TextView lapsTitle;
+    private View lapHeader;
     private Button btnStartPause, btnReset, btnLap;
     private LinearLayout lapList;
     private ScrollView lapScroll;
@@ -43,7 +43,7 @@ public class StopwatchFragment extends Fragment {
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_stopwatch, container, false);
         tvStopwatch = view.findViewById(R.id.tv_stopwatch);
-        lapsTitle = view.findViewById(R.id.tv_laps_title);
+        lapHeader = view.findViewById(R.id.lap_header);
         btnStartPause = view.findViewById(R.id.btn_start_pause);
         btnReset = view.findViewById(R.id.btn_reset);
         btnLap = view.findViewById(R.id.btn_lap);
@@ -84,7 +84,7 @@ public class StopwatchFragment extends Fragment {
             btnLap.setEnabled(false);
             isRunning = false;
             lapList.removeAllViews();
-            lapsTitle.setVisibility(View.GONE);
+            lapHeader.setVisibility(View.GONE);
             lapScroll.setVisibility(View.GONE);
         });
         return view;
@@ -103,9 +103,10 @@ public class StopwatchFragment extends Fragment {
                 String.format(Locale.getDefault(), "Lap %d", lapCount)
         );
         ((TextView) item.findViewById(R.id.tv_lap_time)).setText(formatTime(lapTime));
+        ((TextView) item.findViewById(R.id.tv_overall_time)).setText(formatTime(totalTime));
         lapList.addView(item);
 
-        lapsTitle.setVisibility(View.VISIBLE);
+        lapHeader.setVisibility(View.VISIBLE);
         lapScroll.setVisibility(View.VISIBLE);
         lapScroll.post(() -> lapScroll.fullScroll(View.FOCUS_DOWN));
     }

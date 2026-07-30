@@ -13,16 +13,28 @@
         android:id="@+id/tv_lap_number"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_weight="1"
+        android:layout_weight="0.7"
         android:textColor="@color/text_secondary"
         android:textSize="15sp"
         android:textStyle="bold" />
 
     <TextView
         android:id="@+id/tv_lap_time"
-        android:layout_width="wrap_content"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
+        android:layout_weight="1.15"
         android:fontFamily="sans-serif-medium"
+        android:gravity="end"
         android:textColor="@color/text_primary"
-        android:textSize="20sp" />
+        android:textSize="16sp" />
+
+    <TextView
+        android:id="@+id/tv_overall_time"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1.15"
+        android:fontFamily="sans-serif-medium"
+        android:gravity="end"
+        android:textColor="@color/text_primary"
+        android:textSize="16sp" />
 </LinearLayout>

@@ -384,6 +384,17 @@ Lần sau khi mở hộp thoại của Alarm khác:
 → một danh sách chung để nghe thử và lựa chọn
 ```
 
+Khi nhấn một bài URI đã lưu, app kiểm tra file trước:
+
+```text
+AlarmEditorActivity.sounds()
+-> MusicUriHelper.isReadable(uri)
+-> nếu không đọc được:
+   -> Toast báo không tìm thấy bài
+   -> xóa bài khỏi saved_music
+   -> đặt musicUri = null, musicId = 0 cho mọi Alarm đang dùng bài đó
+```
+
 Nếu đang sửa alarm đã tồn tại, URI nhạc thiết bị được update vào SQLite ngay tại callback. Với alarm mới chưa có ID, URI được giữ trong Model và insert khi nhấn Save để không tạo alarm rác nếu người dùng đóng màn hình.
 
 Luồng lưu thông thường:
@@ -493,10 +504,13 @@ flowchart TD
     A[AlarmService nhận Alarm object] --> B{randomMusic?}
     B -->|Có| C[MusicHelper.playRandom]
     B -->|Không| D{musicUri có dữ liệu?}
-    D -->|Có| E[MusicHelper.playFromUri]
-    E --> L{URI phát được?}
-    L -->|Không| C
-    L -->|Có| G
+    D -->|Có| E{MusicUriHelper đọc được URI?}
+    E -->|Có| L[MusicHelper.playFromUri]
+    E -->|Không| M[MusicHelper.playDefault - alarm1]
+    L --> N{MediaPlayer đang phát?}
+    N -->|Không| M
+    N -->|Có| G
+    M --> G
     D -->|Không| F[MusicHelper.playFromResource]
     C --> G[setLooping]
     F --> G
@@ -511,7 +525,8 @@ Thứ tự ưu tiên nguồn âm thanh:
 ```text
 1. Random music
 2. File audio từ thiết bị
-3. Một trong năm file res/raw
+3. Bài res/raw đã chọn bằng musicId
+4. Nếu URI bị mất hoặc không phát được: cố định R.raw.alarm1
 ```
 
 ## 7.3. Tạo notification toàn màn hình

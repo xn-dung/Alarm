@@ -1,4 +1,9 @@
 <resources>
     <string name="app_name">Alarm</string>
+    <string name="device_music_not_found_removed">Song not found on this device. It was removed from saved music.</string>
+    <string name="device_music_cannot_play">This audio file cannot be played.</string>
+    <string name="lap_column">Lap</string>
+    <string name="lap_time_column">Lap time</string>
+    <string name="overall_time_column">Overall time</string>
     <string-array name="challenges"><item>Simple tap to dismiss</item><item>Solve a math challenge</item></string-array>
 </resources>

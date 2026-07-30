@@ -14,6 +14,7 @@ import com.example.myapplication.Activities.AlarmActivity;
 import com.example.myapplication.Model.Alarm;
 import com.example.myapplication.R;
 import com.example.myapplication.Util.MusicHelper;
+import com.example.myapplication.Util.MusicUriHelper;
 
 public class AlarmService extends Service {
     private MusicHelper musicHelper;
@@ -57,9 +58,11 @@ public class AlarmService extends Service {
             if (alarm.getRandomMusic()) {
                 musicHelper.playRandom(this);
             } else if (alarm.getMusicUri() != null && !alarm.getMusicUri().isEmpty()) {
-                musicHelper.playFromUri(this, alarm.getMusicUri());
+                if (MusicUriHelper.isReadable(this, alarm.getMusicUri())) {
+                    musicHelper.playFromUri(this, alarm.getMusicUri());
+                }
                 if (!musicHelper.isPlaying()) {
-                    musicHelper.playRandom(this);
+                    musicHelper.playDefault(this);
                 }
             } else {
                 int[] sounds = {R.raw.alarm1, R.raw.alarm2, R.raw.alarm3, R.raw.alarm4, R.raw.alarm5};

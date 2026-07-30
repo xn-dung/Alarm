@@ -13,7 +13,7 @@ import java.util.List;
 
 public class AlarmDatabaseHelper extends SQLiteOpenHelper {
     private static final String DATABASE_NAME = "alarm.db";
-    private static final int DATABASE_VERSION = 2;
+    private static final int DATABASE_VERSION = 3;
 
     public AlarmDatabaseHelper(Context context){
         super(context,DATABASE_NAME,null,DATABASE_VERSION);
@@ -27,7 +27,7 @@ public class AlarmDatabaseHelper extends SQLiteOpenHelper {
                         AlarmContract.AlarmEntry.COLUMN_HOUR + " INTEGER NOT NULL, " +
                         AlarmContract.AlarmEntry.COLUMN_MINUTE + " INTEGER NOT NULL, " +
                         AlarmContract.AlarmEntry.COLUMN_LABEL + " TEXT, " +
-                        AlarmContract.AlarmEntry.COLUMN_REPEAT_DAYS + " INTEGER, " +
+                        AlarmContract.AlarmEntry.COLUMN_REPEAT_DAYS + " TEXT, " +
                         AlarmContract.AlarmEntry.COLUMN_ENABLED + " INTEGER, " +
                         AlarmContract.AlarmEntry.COLUMN_MUSIC_URI +" TEXT, "+
                         AlarmContract.AlarmEntry.COLUMN_VOLUMNE + " INTEGER, "+
@@ -131,6 +131,13 @@ public class AlarmDatabaseHelper extends SQLiteOpenHelper {
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion){
         if (oldVersion < 2) db.execSQL("ALTER TABLE " + AlarmContract.AlarmEntry.TABLE_NAME + " ADD COLUMN " + AlarmContract.AlarmEntry.COLUMN_DISMISS_MODE + " INTEGER DEFAULT 0");
+        if (oldVersion < 3) {
+            String table = AlarmContract.AlarmEntry.TABLE_NAME;
+            db.execSQL("ALTER TABLE " + table + " RENAME TO " + table + "_old");
+            onCreate(db);
+            db.execSQL("INSERT INTO " + table + " SELECT * FROM " + table + "_old");
+            db.execSQL("DROP TABLE " + table + "_old");
+        }
     }
     private Alarm cursorToAlarm(Cursor cursor){
         Alarm alarm = new Alarm();

@@ -23,7 +23,7 @@ import java.util.List;
 import java.util.Locale;
 
 public class AlarmFragment extends Fragment {
-    
+
     private AlarmDao dao;
     private AlarmAdapter adapter;
 
@@ -35,11 +35,11 @@ public class AlarmFragment extends Fragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle state) {
         dao = new AlarmDao(requireContext());
         adapter = new AlarmAdapter(a -> edit(a.getId()), this::setEnabled);
-        
+
         RecyclerView list = view.findViewById(R.id.rv_alarms);
         list.setLayoutManager(new LinearLayoutManager(requireContext()));
         list.setAdapter(adapter);
-        
+
         view.findViewById(R.id.quick_add).setOnClickListener(v -> edit(-1));
         load();
     }
@@ -55,24 +55,25 @@ public class AlarmFragment extends Fragment {
     private void load() {
         List<Alarm> alarms = dao.getAllAlarms();
         adapter.setAlarmList(alarms);
-        
+
         TextView time = getView().findViewById(R.id.tv_next_time);
         TextView detail = getView().findViewById(R.id.tv_next_detail);
-        
+
         Alarm next = null;
         long nearest = Long.MAX_VALUE;
-        
+
         for (Alarm alarm : alarms) {
             if (alarm.getEnabled()) {
                 Calendar c = Calendar.getInstance();
                 c.set(Calendar.HOUR_OF_DAY, alarm.getHour());
                 c.set(Calendar.MINUTE, alarm.getMinute());
                 c.set(Calendar.SECOND, 0);
-                
+                c.set(Calendar.MILLISECOND, 0);
+
                 if (c.getTimeInMillis() <= System.currentTimeMillis()) {
                     c.add(Calendar.DAY_OF_YEAR, 1);
                 }
-                
+
                 String repeat = alarm.getRepeatDays();
                 if (repeat != null && !repeat.isEmpty()) {
                     for (int i = 0; i < 7; i++) {
@@ -83,14 +84,14 @@ public class AlarmFragment extends Fragment {
                         c.add(Calendar.DAY_OF_YEAR, 1);
                     }
                 }
-                
+
                 if (c.getTimeInMillis() < nearest) {
                     nearest = c.getTimeInMillis();
                     next = alarm;
                 }
             }
         }
-        
+
         if (next == null) {
             time.setText("No alarm set");
             detail.setText("Add one and let us wake you gently");
@@ -108,13 +109,13 @@ public class AlarmFragment extends Fragment {
 
     private void setEnabled(Alarm alarm) {
         dao.updateAlarm(alarm);
-        
+
         if (alarm.getEnabled()) {
             AlarmScheduler.schedule(requireContext(), alarm);
         } else {
             AlarmScheduler.cancel(requireContext(), alarm.getId());
         }
-        
+
         load();
     }
 }

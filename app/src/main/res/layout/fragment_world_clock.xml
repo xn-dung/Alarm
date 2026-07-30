@@ -32,7 +32,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="22dp"
-        android:text="YOUR CITIES"
+        android:text="YOUR REGIONS"
         android:textColor="@color/purple_light"
         android:textSize="12sp"
         android:textStyle="bold" />

@@ -4,7 +4,6 @@ import android.app.AlertDialog;
 import android.content.Intent;
 import android.media.MediaPlayer;
 import android.net.Uri;
-import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
@@ -27,6 +26,7 @@ import com.example.myapplication.DAO.AlarmDao;
 import com.example.myapplication.Model.Alarm;
 import com.example.myapplication.R;
 import com.example.myapplication.Util.AlarmScheduler;
+import com.example.myapplication.Util.NumberPickerStyler;
 
 import java.util.Calendar;
 import java.util.Locale;
@@ -92,8 +92,8 @@ public class AlarmEditorActivity extends AppCompatActivity {
         minute.setMinValue(0);
         minute.setMaxValue(59);
         minute.setFormatter(value -> String.format(Locale.getDefault(), "%02d", value));
-        style(hour);
-        style(minute);
+        NumberPickerStyler.apply(hour);
+        NumberPickerStyler.apply(minute);
 
         int primaryTextColor = ContextCompat.getColor(this, R.color.text_primary);
         for (CheckBox day : days) day.setTextColor(primaryTextColor);
@@ -118,31 +118,6 @@ public class AlarmEditorActivity extends AppCompatActivity {
         findViewById(R.id.btn_save).setOnClickListener(v -> save());
         findViewById(R.id.btn_delete).setOnClickListener(v -> delete());
         melody.setOnClickListener(v -> sounds());
-    }
-
-    private void style(NumberPicker picker) {
-        picker.postDelayed(() -> paint(picker), 80);
-        picker.setOnValueChangedListener((view, oldValue, newValue) -> view.postDelayed(() -> paint(view), 40));
-        picker.setOnScrollListener((view, scrollState) -> {
-            if (scrollState == NumberPicker.OnScrollListener.SCROLL_STATE_IDLE) {
-                view.postDelayed(() -> paint(view), 80);
-            }
-        });
-    }
-
-    private void paint(NumberPicker picker) {
-        for (int i = 0; i < picker.getChildCount(); i++) {
-            if (!(picker.getChildAt(i) instanceof EditText)) continue;
-            EditText input = (EditText) picker.getChildAt(i);
-            input.setTextColor(ContextCompat.getColor(this, R.color.text_primary));
-            input.setTextSize(27);
-            input.setTypeface(android.graphics.Typeface.DEFAULT_BOLD);
-            input.setAlpha(1f);
-        }
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            picker.setTextColor(ContextCompat.getColor(this, R.color.text_primary));
-        }
-        picker.invalidate();
     }
 
     private void bind() {
@@ -191,6 +166,7 @@ public class AlarmEditorActivity extends AppCompatActivity {
             melody.setText("Sound  Device audio     Change");
             return;
         }
+
         int index = Math.max(0, Math.min(alarm.getMusicId(), 4));
         melody.setText("Sound  " + sounds[index] + "                         Change");
     }

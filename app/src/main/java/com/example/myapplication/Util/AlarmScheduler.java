@@ -62,6 +62,9 @@ public class AlarmScheduler {
         }
         PendingIntent reminder = PendingIntent.getBroadcast(context, 200000 + alarmId, new Intent(context, UpcomingAlarmReceiver.class), PendingIntent.FLAG_NO_CREATE | (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M ? PendingIntent.FLAG_IMMUTABLE : 0));
         if (reminder != null) { alarmManager.cancel(reminder); reminder.cancel(); }
+        // Hủy cả lịch snooze đang chờ, nếu không alarm đã tắt/xóa vẫn reo lại sau 5 phút
+        PendingIntent snoozed = PendingIntent.getBroadcast(context, 100000 + alarmId, new Intent(context, AlarmReceiver.class), PendingIntent.FLAG_NO_CREATE | (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M ? PendingIntent.FLAG_IMMUTABLE : 0));
+        if (snoozed != null) { alarmManager.cancel(snoozed); snoozed.cancel(); }
     }
     public static void snooze(Context context, Alarm alarm) {
         AlarmManager manager = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);

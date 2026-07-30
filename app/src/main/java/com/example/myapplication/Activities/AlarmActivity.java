@@ -45,7 +45,6 @@ public class AlarmActivity extends AppCompatActivity {
         getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
             @Override
             public void handleOnBackPressed() {
-                // A ringing alarm can only be dismissed or snoozed from its controls.
             }
         });
         
@@ -100,6 +99,6 @@ public class AlarmActivity extends AppCompatActivity {
     @SuppressLint({"MissingSuperCall", "GestureBackNavigation"})
     @Override
     public void onBackPressed() {
-        // Trống để vô hiệu hóa nút back cứng khi báo thức đang kêu
+
     }
 }

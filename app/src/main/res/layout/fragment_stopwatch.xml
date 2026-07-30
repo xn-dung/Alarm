@@ -40,22 +40,65 @@
             android:layout_width="0dp"
             android:layout_height="52dp"
             android:layout_weight="1"
-            android:layout_marginEnd="10dp"
+            android:layout_marginEnd="5dp"
             android:background="@drawable/bg_button_secondary"
             android:text="Reset"
             android:textAllCaps="false"
             android:textColor="@color/text_primary" />
 
         <androidx.appcompat.widget.AppCompatButton
+            android:id="@+id/btn_lap"
+            android:layout_width="0dp"
+            android:layout_height="52dp"
+            android:layout_marginHorizontal="5dp"
+            android:layout_weight="1"
+            android:background="@drawable/bg_button_secondary"
+            android:enabled="false"
+            android:text="Lap"
+            android:textAllCaps="false"
+            android:textColor="@color/text_primary"
+            android:textStyle="bold" />
+
+        <androidx.appcompat.widget.AppCompatButton
             android:id="@+id/btn_start_pause"
             android:layout_width="0dp"
             android:layout_height="52dp"
             android:layout_weight="1"
-            android:layout_marginStart="10dp"
+            android:layout_marginStart="5dp"
             android:background="@drawable/bg_button_primary"
             android:text="Start"
             android:textAllCaps="false"
             android:textColor="@color/primary_button_text"
             android:textStyle="bold" />
     </LinearLayout>
+
+    <TextView
+        android:id="@+id/tv_laps_title"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="22dp"
+        android:text="Laps"
+        android:textColor="@color/text_primary"
+        android:textSize="18sp"
+        android:textStyle="bold"
+        android:visibility="gone" />
+
+    <ScrollView
+        android:id="@+id/lap_scroll"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_marginTop="10dp"
+        android:layout_weight="1"
+        android:clipToPadding="false"
+        android:fillViewport="true"
+        android:paddingBottom="12dp"
+        android:scrollbars="none"
+        android:visibility="gone">
+
+        <LinearLayout
+            android:id="@+id/lap_list"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical" />
+    </ScrollView>
 </LinearLayout>

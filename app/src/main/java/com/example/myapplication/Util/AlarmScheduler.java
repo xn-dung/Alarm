@@ -1,6 +1,7 @@
 package com.example.myapplication.Util;
 
 import android.app.AlarmManager;
+import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
@@ -44,7 +45,7 @@ public class AlarmScheduler {
         long reminder = calendar.getTimeInMillis() - 60_000L;
         if (reminder > System.currentTimeMillis()) {
             Intent upcoming = new Intent(context, UpcomingAlarmReceiver.class); upcoming.putExtra("ALARM_ID", alarm.getId()); upcoming.putExtra("LABEL", alarm.getLabel());
-            PendingIntent notificationIntent = PendingIntent.getBroadcast(context, 200000 + alarm.getId(), upcoming, PendingIntent.FLAG_UPDATE_CURRENT | (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M ? PendingIntent.FLAG_IMMUTABLE : 0));
+            PendingIntent notificationIntent = PendingIntent.getBroadcast(context, UpcomingAlarmReceiver.notificationId(alarm.getId()), upcoming, PendingIntent.FLAG_UPDATE_CURRENT | (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M ? PendingIntent.FLAG_IMMUTABLE : 0));
             scheduleAt(alarmManager, reminder, notificationIntent);
         }
     }
@@ -60,8 +61,13 @@ public class AlarmScheduler {
             alarmManager.cancel(pendingIntent);
             pendingIntent.cancel();
         }
-        PendingIntent reminder = PendingIntent.getBroadcast(context, 200000 + alarmId, new Intent(context, UpcomingAlarmReceiver.class), PendingIntent.FLAG_NO_CREATE | (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M ? PendingIntent.FLAG_IMMUTABLE : 0));
+        PendingIntent reminder = PendingIntent.getBroadcast(context, UpcomingAlarmReceiver.notificationId(alarmId), new Intent(context, UpcomingAlarmReceiver.class), PendingIntent.FLAG_NO_CREATE | (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M ? PendingIntent.FLAG_IMMUTABLE : 0));
         if (reminder != null) { alarmManager.cancel(reminder); reminder.cancel(); }
+        NotificationManager notificationManager =
+                (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
+        notificationManager.cancel(UpcomingAlarmReceiver.notificationId(alarmId));
+        // Also removes reminders displayed by an older app build.
+        notificationManager.cancel(alarmId);
     }
     public static void snooze(Context context, Alarm alarm) {
         AlarmManager manager = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);

@@ -7,13 +7,14 @@ import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 
 import com.example.myapplication.Model.Alarm;
+import com.example.myapplication.Model.SavedMusic;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public class AlarmDatabaseHelper extends SQLiteOpenHelper {
     private static final String DATABASE_NAME = "alarm.db";
-    private static final int DATABASE_VERSION = 2;
+    private static final int DATABASE_VERSION = 3;
 
     public AlarmDatabaseHelper(Context context){
         super(context,DATABASE_NAME,null,DATABASE_VERSION);
@@ -37,7 +38,7 @@ public class AlarmDatabaseHelper extends SQLiteOpenHelper {
                         AlarmContract.AlarmEntry.COLUMN_MUSIC_ID + " INTEGER DEFAULT 0, " +
                         AlarmContract.AlarmEntry.COLUMN_DISMISS_MODE + " INTEGER DEFAULT 0" +");";
         db.execSQL(CREATE_TABLE);
-
+        createSavedMusicTable(db);
     }
     // Used
     public long insertAlarm(ContentValues values){
@@ -128,10 +129,77 @@ public class AlarmDatabaseHelper extends SQLiteOpenHelper {
 
         return alarmList;
     }
+
+    public long insertSavedMusic(ContentValues values) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        long rowId = db.insertWithOnConflict(
+                AlarmContract.SavedMusicEntry.TABLE_NAME,
+                null,
+                values,
+                SQLiteDatabase.CONFLICT_REPLACE
+        );
+        db.close();
+        return rowId;
+    }
+
+    public List<SavedMusic> getAllSavedMusic() {
+        List<SavedMusic> result = new ArrayList<>();
+        SQLiteDatabase db = this.getReadableDatabase();
+        Cursor cursor = db.query(
+                AlarmContract.SavedMusicEntry.TABLE_NAME,
+                null,
+                null,
+                null,
+                null,
+                null,
+                AlarmContract.SavedMusicEntry.COLUMN_ADDED_AT + " DESC"
+        );
+        while (cursor.moveToNext()) {
+            result.add(new SavedMusic(
+                    cursor.getInt(cursor.getColumnIndexOrThrow(AlarmContract.SavedMusicEntry._ID)),
+                    cursor.getString(cursor.getColumnIndexOrThrow(AlarmContract.SavedMusicEntry.COLUMN_NAME)),
+                    cursor.getString(cursor.getColumnIndexOrThrow(AlarmContract.SavedMusicEntry.COLUMN_URI))
+            ));
+        }
+        cursor.close();
+        db.close();
+        return result;
+    }
+
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion){
         if (oldVersion < 2) db.execSQL("ALTER TABLE " + AlarmContract.AlarmEntry.TABLE_NAME + " ADD COLUMN " + AlarmContract.AlarmEntry.COLUMN_DISMISS_MODE + " INTEGER DEFAULT 0");
+        if (oldVersion < 3) {
+            createSavedMusicTable(db);
+            migrateExistingMusic(db);
+        }
     }
+
+    private void createSavedMusicTable(SQLiteDatabase db) {
+        db.execSQL(
+                "CREATE TABLE IF NOT EXISTS " + AlarmContract.SavedMusicEntry.TABLE_NAME + " (" +
+                        AlarmContract.SavedMusicEntry._ID + " INTEGER PRIMARY KEY AUTOINCREMENT, " +
+                        AlarmContract.SavedMusicEntry.COLUMN_NAME + " TEXT NOT NULL, " +
+                        AlarmContract.SavedMusicEntry.COLUMN_URI + " TEXT NOT NULL UNIQUE, " +
+                        AlarmContract.SavedMusicEntry.COLUMN_ADDED_AT + " INTEGER NOT NULL)"
+        );
+    }
+
+    private void migrateExistingMusic(SQLiteDatabase db) {
+        db.execSQL(
+                "INSERT OR IGNORE INTO " + AlarmContract.SavedMusicEntry.TABLE_NAME + " (" +
+                        AlarmContract.SavedMusicEntry.COLUMN_NAME + ", " +
+                        AlarmContract.SavedMusicEntry.COLUMN_URI + ", " +
+                        AlarmContract.SavedMusicEntry.COLUMN_ADDED_AT + ") " +
+                        "SELECT 'Device audio ' || " + AlarmContract.AlarmEntry._ID + ", " +
+                        AlarmContract.AlarmEntry.COLUMN_MUSIC_URI + ", " +
+                        System.currentTimeMillis() + " FROM " +
+                        AlarmContract.AlarmEntry.TABLE_NAME + " WHERE " +
+                        AlarmContract.AlarmEntry.COLUMN_MUSIC_URI + " IS NOT NULL AND TRIM(" +
+                        AlarmContract.AlarmEntry.COLUMN_MUSIC_URI + ") != ''"
+        );
+    }
+
     private Alarm cursorToAlarm(Cursor cursor){
         Alarm alarm = new Alarm();
 

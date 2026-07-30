@@ -18,6 +18,7 @@ import com.example.myapplication.Util.MusicHelper;
 public class AlarmService extends Service {
     private MusicHelper musicHelper;
     private static final String CHANNEL_ID = "AlarmServiceChannel";
+    private static final int NOTIFICATION_ID = 410000;
 
     @Override
     public void onCreate() {
@@ -43,16 +44,23 @@ public class AlarmService extends Service {
                 .setContentText(alarm != null ? alarm.getLabel() : "Time to wake up!")
                 .setPriority(NotificationCompat.PRIORITY_HIGH)
                 .setCategory(NotificationCompat.CATEGORY_ALARM)
+                .setContentIntent(fullScreenPendingIntent)
+                .setDeleteIntent(fullScreenPendingIntent)
                 .setFullScreenIntent(fullScreenPendingIntent, true)
+                .setOngoing(true)
+                .setAutoCancel(false)
                 .build();
 
-        startForeground(1, notification);
+        startForeground(NOTIFICATION_ID, notification);
         
         if (alarm != null) {
             if (alarm.getRandomMusic()) {
                 musicHelper.playRandom(this);
             } else if (alarm.getMusicUri() != null && !alarm.getMusicUri().isEmpty()) {
                 musicHelper.playFromUri(this, alarm.getMusicUri());
+                if (!musicHelper.isPlaying()) {
+                    musicHelper.playRandom(this);
+                }
             } else {
                 int[] sounds = {R.raw.alarm1, R.raw.alarm2, R.raw.alarm3, R.raw.alarm4, R.raw.alarm5};
                 musicHelper.playFromResource(this, sounds[Math.max(0, Math.min(alarm.getMusicId(), 4))]);
@@ -83,9 +91,14 @@ public class AlarmService extends Service {
 
     @Override
     public void onDestroy() {
-        super.onDestroy();
         musicHelper.stop();
         ((android.os.Vibrator) getSystemService(VIBRATOR_SERVICE)).cancel();
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            stopForeground(STOP_FOREGROUND_REMOVE);
+        } else {
+            stopForeground(true);
+        }
+        super.onDestroy();
     }
 
     @Nullable

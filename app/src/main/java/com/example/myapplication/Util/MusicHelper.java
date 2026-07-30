@@ -43,8 +43,17 @@ public class MusicHelper {
     }
     public void playFromUri(Context context, String value){
         stop();
-        try { mediaPlayer = MediaPlayer.create(context, Uri.parse(value), null, new AudioAttributes.Builder().setUsage(AudioAttributes.USAGE_ALARM).setContentType(AudioAttributes.CONTENT_TYPE_MUSIC).build(), AudioManager.AUDIO_SESSION_ID_GENERATE); } catch (Exception ignored) { mediaPlayer = null; }
-        if (mediaPlayer != null) mediaPlayer.start();
+        try {
+            mediaPlayer = MediaPlayer.create(context, Uri.parse(value), null,
+                    new AudioAttributes.Builder()
+                            .setUsage(AudioAttributes.USAGE_ALARM)
+                            .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
+                            .build(),
+                    AudioManager.AUDIO_SESSION_ID_GENERATE);
+            if (mediaPlayer != null) mediaPlayer.start();
+        } catch (Exception ignored) {
+            release();
+        }
     }
     public void playRandom(Context context){
         Random random = new Random();
@@ -88,7 +97,11 @@ public class MusicHelper {
         }
     }
     public boolean isPlaying(){
-        return mediaPlayer != null && mediaPlayer.isPlaying();
+        try {
+            return mediaPlayer != null && mediaPlayer.isPlaying();
+        } catch (Exception ignored) {
+            return false;
+        }
     }
     private void cancelTimer(){
         if(handler != null && stopRunnable != null){

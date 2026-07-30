@@ -12,6 +12,11 @@ import androidx.core.app.NotificationCompat;
 import com.example.myapplication.R;
 
 public class UpcomingAlarmReceiver extends BroadcastReceiver {
+    private static final int NOTIFICATION_ID_BASE = 200000;
+
+    public static int notificationId(int alarmId) {
+        return NOTIFICATION_ID_BASE + alarmId;
+    }
 
     @Override
     public void onReceive(Context context, Intent intent) {
@@ -26,8 +31,9 @@ public class UpcomingAlarmReceiver extends BroadcastReceiver {
         
         String label = intent.getStringExtra("LABEL");
         
+        int alarmId = intent.getIntExtra("ALARM_ID", 0);
         manager.notify(
-                intent.getIntExtra("ALARM_ID", 0),
+                notificationId(alarmId),
                 new NotificationCompat.Builder(context, channel)
                         .setSmallIcon(R.drawable.ic_launcher_foreground)
                         .setContentTitle("Alarm in 1 minute")

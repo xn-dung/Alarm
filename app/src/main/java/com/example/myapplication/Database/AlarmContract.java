@@ -19,4 +19,11 @@ public class AlarmContract {
         public static final String COLUMN_MUSIC_ID = "music_id";
         public static final String COLUMN_DISMISS_MODE = "dismiss_mode";
     }
+
+    public static class SavedMusicEntry implements BaseColumns {
+        public static final String TABLE_NAME = "saved_music";
+        public static final String COLUMN_NAME = "name";
+        public static final String COLUMN_URI = "uri";
+        public static final String COLUMN_ADDED_AT = "added_at";
+    }
 }

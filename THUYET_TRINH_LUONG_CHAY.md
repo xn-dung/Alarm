@@ -17,8 +17,8 @@
 | `Activities` | Đại diện cho các màn hình độc lập và điều phối cấp cao | Màn chính, màn thêm/sửa alarm, màn alarm đang reo |
 | `Fragment` | Đại diện cho 4 tab chức năng nằm trong màn chính | Alarm, World Clock, Timer, Stopwatch |
 | `Adapter` | Chuyển dữ liệu Model thành từng item trong `RecyclerView`, đồng thời trả sự kiện click về Fragment | Danh sách alarm, thành phố, timer gần đây |
-| `DAO` | Lớp trung gian giữa giao diện và SQLite | Thêm, sửa, xóa, đọc alarm |
-| `Model` | Đối tượng dữ liệu được truyền giữa các lớp | `Alarm`, `RecentTimer`, `WorldClock` |
+| `DAO` | Lớp trung gian giữa giao diện và SQLite | CRUD alarm và thư viện nhạc URI |
+| `Model` | Đối tượng dữ liệu được truyền giữa các lớp | `Alarm`, `SavedMusic`, `RecentTimer`, `WorldClock` |
 | `Database` | Tạo schema và thực thi CRUD trên SQLite | `AlarmDatabaseHelper`, `TimerRecentDatabase` |
 | `Util` | Chứa logic hỗ trợ dùng lại ở nhiều luồng | Đặt/hủy lịch, snooze, phát nhạc, style NumberPicker |
 | `Receiver` | Nhận broadcast từ `AlarmManager` khi đến thời điểm | Alarm chính, nhắc trước một phút, Timer kết thúc |
@@ -139,11 +139,11 @@ Fragment Alarm mở Activity này bằng `Intent` và truyền `alarm_id`.
 
 | Hàm/callback | Chức năng chi tiết | Hàm/lớp được gọi |
 |---|---|---|
-| Callback `musicPicker` | Nhận kết quả từ trình chọn file. Nếu có URI, xin giữ quyền đọc lâu dài, lưu URI vào `alarm.musicUri`, cập nhật dòng hiển thị âm thanh | Android `ContentResolver.takePersistableUriPermission()`; `Alarm.setMusicUri()` |
+| Callback `musicPicker` | Nhận URI, lấy tên file, giữ quyền đọc, lưu vào thư viện `saved_music`, gán cho Alarm; nếu đang edit thì update dòng Alarm ngay | `SavedMusicDao.save()`, `Alarm.setMusicUri()`, `AlarmDao.updateAlarm()` |
 | `onCreate(Bundle state)` | Nạp layout, lấy `alarm_id`, tạo DAO, ánh xạ toàn bộ View, cấu hình NumberPicker, tạo hoặc đọc Model Alarm, bind dữ liệu và gắn listener cho Close/Save/Delete/Sound | `AlarmDao.getAlarmbyId()`, `bind()`, `NumberPickerStyler.apply()`, `save()`, `delete()`, `sounds()` |
 | `bind()` | Đưa dữ liệu từ Model `alarm` lên giao diện. Nếu là edit thì hiện nút Delete và đổi title. Tick các ngày lặp dựa trên `repeatDays` | Gọi các getter của `Alarm` và `showMelody()` |
-| `sounds()` | Tạo hộp thoại danh sách 5 âm thanh. Click một âm sẽ preview. Có lựa chọn file thiết bị, Cancel hoặc Use sound | Gọi `play()`, `pickMusic()`, `stopPreview()`, `showMelody()` |
-| `showMelody()` | Hiển thị tên âm thanh hiện tại. Nếu có `musicUri` thì ghi Device audio; nếu dùng file raw thì ánh xạ `musicId` sang tên | Gọi getter của `Alarm` |
+| `sounds()` | Ghép 5 nhạc mặc định với toàn bộ `SavedMusic`; click để preview, chọn lại URI đã lưu hoặc thêm file mới | `SavedMusicDao.getAll()`, `play()`, `pickMusic()` |
+| `showMelody()` | Hiển thị tên nhạc mặc định hoặc tên file tương ứng với `musicUri` trong thư viện | `SavedMusicDao.getAll()` |
 | `pickMusic()` | Tạo `Intent.ACTION_OPEN_DOCUMENT` với MIME `audio/*`, cho phép chọn một file âm thanh và giữ quyền đọc | Gọi `musicPicker.launch(intent)` |
 | `play(int index)` | Dừng preview cũ, tạo `MediaPlayer` từ một trong 5 file `R.raw.alarm1..5`, giảm volume preview, phát và lên lịch tự dừng | Android `MediaPlayer`; `previewHandler.postDelayed()` |
 | `stopPreview()` | Xóa callback tự dừng, stop/release MediaPlayer và đặt `preview = null` | Android `MediaPlayer.stop()` và `release()` |
@@ -664,6 +664,25 @@ AlarmFragment.load()
             -> List<Alarm>
 ```
 
+## 5.2. `SavedMusicDao`
+
+`SavedMusicDao` quản lý thư viện URI nhạc dùng chung. Nó vẫn sử dụng `AlarmDatabaseHelper`, vì bảng `saved_music` nằm trong cùng file `alarm.db`.
+
+| Hàm | Chức năng |
+|---|---|
+| `SavedMusicDao(Context)` | Tạo `AlarmDatabaseHelper` |
+| `save(String name, String uri)` | Đổi tên, URI và thời điểm thêm thành `ContentValues`, sau đó insert/replace |
+| `getAll()` | Đọc toàn bộ thư viện, mới thêm gần nhất đứng trước |
+
+Flow:
+
+```text
+AlarmEditorActivity chọn Device audio
+    -> SavedMusicDao.save(name, uri)
+        -> AlarmDatabaseHelper.insertSavedMusic()
+            -> bảng saved_music
+```
+
 ---
 
 # 6. Folder `Model`
@@ -762,6 +781,25 @@ WorldClockFragment.showWorldClocks()
     -> TextView
 ```
 
+## 6.4. `SavedMusic`
+
+Model bất biến đại diện cho một bài nhạc thiết bị đã được thêm vào thư viện:
+
+| Field/getter | Ý nghĩa |
+|---|---|
+| `id` / `getId()` | ID dòng trong `saved_music` |
+| `name` / `getName()` | Tên file hiển thị trong hộp thoại |
+| `uri` / `getUri()` | URI dùng để nghe thử và phát báo thức |
+
+Flow:
+
+```text
+AlarmDatabaseHelper.getAllSavedMusic()
+    -> List<SavedMusic>
+    -> AlarmEditorActivity.sounds()
+    -> hiển thị chung với 5 nhạc mặc định
+```
+
 ---
 
 # 7. Folder `Database`, `Util`, `Receiver` và `Service`
@@ -779,7 +817,7 @@ Project dùng **SQLite thuần qua `SQLiteOpenHelper`**, không dùng Room. Chu�
 
 ```text
 Activity/Fragment
-    -> AlarmDao
+    -> AlarmDao / SavedMusicDao
         -> AlarmDatabaseHelper
             -> SQLiteDatabase
 ```
@@ -833,6 +871,16 @@ Trong bảng thực tế, `_ID` là khóa chính tự tăng.
 | `COLUMN_MUSIC_ID` | `music_id` | `INTEGER DEFAULT 0` | Index nhạc mặc định từ 0 đến 4 |
 | `COLUMN_DISMISS_MODE` | `dismiss_mode` | `INTEGER DEFAULT 0` | `0`: tắt thường, `1`: giải toán |
 
+`SavedMusicEntry` mô tả bảng thư viện dùng chung:
+
+| Hằng số | Tên cột | Kiểu | Ý nghĩa |
+|---|---|---|---|
+| `TABLE_NAME` | `saved_music` | — | Tên bảng thư viện |
+| `_ID` | `_id` | `INTEGER PRIMARY KEY AUTOINCREMENT` | ID bài nhạc |
+| `COLUMN_NAME` | `name` | `TEXT NOT NULL` | Tên file hiển thị |
+| `COLUMN_URI` | `uri` | `TEXT NOT NULL UNIQUE` | URI duy nhất, tránh lưu trùng |
+| `COLUMN_ADDED_AT` | `added_at` | `INTEGER NOT NULL` | Thời điểm thêm để sắp xếp |
+
 Lưu ý:
 
 - Tên hằng `COLUMN_VOLUMNE` bị viết sai chính tả, nhưng giá trị cột vẫn là `"volume"` nên chương trình vẫn hoạt động nếu mọi nơi tiếp tục dùng cùng hằng này.
@@ -844,11 +892,11 @@ Lưu ý:
 
 ```java
 private static final String DATABASE_NAME = "alarm.db";
-private static final int DATABASE_VERSION = 2;
+private static final int DATABASE_VERSION = 3;
 ```
 
 - File SQLite tên `alarm.db`.
-- Version hiện tại là `2`.
+- Version hiện tại là `3`.
 - Khi app mở database lần đầu, Android gọi `onCreate()`.
 - Khi tăng version, Android gọi `onUpgrade()`.
 
@@ -857,13 +905,17 @@ private static final int DATABASE_VERSION = 2;
 | Hàm | Ai gọi | Chức năng | Kết quả trả về |
 |---|---|---|---|
 | `AlarmDatabaseHelper(Context)` | `AlarmDao` | Khởi tạo `SQLiteOpenHelper` với tên và version database | Đối tượng helper |
-| `onCreate(SQLiteDatabase)` | Android | Tạo bảng `alarms` và toàn bộ cột | Không trả về |
+| `onCreate(SQLiteDatabase)` | Android | Tạo bảng `alarms` và `saved_music` | Không trả về |
 | `insertAlarm(ContentValues)` | `AlarmDao.insertAlarm()` | Chèn một alarm | `rowId`; thường là ID dòng mới |
 | `deleteAlarm(int)` | `AlarmDao.deleteAlarm()` | Xóa dòng theo `_ID` | Số dòng đã xóa |
 | `updateAlarm(ContentValues, Alarm)` | `AlarmDao.updateAlarm()` | Cập nhật dòng theo `alarm.getId()` | Số dòng đã cập nhật |
 | `getAlarmById(int)` | `AlarmDao.getAlarmbyId()` | Query một dòng theo ID | Một `Alarm` |
 | `getAllAlarms()` | `AlarmDao.getAllAlarms()` | Query toàn bộ, sắp xếp theo giờ và phút tăng dần | `List<Alarm>` |
+| `insertSavedMusic(ContentValues)` | `SavedMusicDao.save()` | Insert/replace theo URI unique | ID dòng |
+| `getAllSavedMusic()` | `SavedMusicDao.getAll()` | Đọc thư viện theo `added_at DESC` | `List<SavedMusic>` |
 | `onUpgrade(SQLiteDatabase, int, int)` | Android | Nâng schema cũ lên version mới | Không trả về |
+| `createSavedMusicTable(SQLiteDatabase)` | Nội bộ helper | Tạo bảng thư viện nếu chưa có | Không trả về |
+| `migrateExistingMusic(SQLiteDatabase)` | `onUpgrade()` | Đưa các `music_uri` cũ từ bảng alarm vào thư viện | Không trả về |
 | `cursorToAlarm(Cursor)` | Nội bộ helper | Chuyển một dòng `Cursor` thành Model `Alarm` | Một `Alarm` |
 
 #### `onCreate()` tạo bảng thế nào?
@@ -1011,6 +1063,16 @@ if (oldVersion < 2) {
 ```
 
 Khi database version 1 nâng lên version 2, app thêm cột `dismiss_mode` nhưng giữ nguyên alarm cũ. Alarm cũ nhận mặc định `0`, nghĩa là tắt báo thức bình thường.
+
+Khi version nhỏ hơn 3 nâng lên version 3:
+
+```text
+Tạo bảng saved_music
+-> đọc các music_uri không rỗng trong bảng alarms
+-> INSERT OR IGNORE vào saved_music
+```
+
+`INSERT OR IGNORE` kết hợp cột URI unique giúp nhiều Alarm dùng cùng URI chỉ tạo một bài trong thư viện.
 
 ### 7.1.3. `TimerRecentDatabase`
 
@@ -1322,7 +1384,7 @@ Bao bọc `MediaPlayer` cho `AlarmService`. Nhờ đó Service không phải t�
 | `MusicHelper()` | Tạo Handler và Runnable dừng nhạc |
 | `playFromResource(Context, int)` | Dừng bài cũ, tạo MediaPlayer từ file `res/raw`, dùng `USAGE_ALARM`, rồi phát |
 | `playDefault(Context)` | Phát `alarm1` |
-| `playFromUri(Context, String)` | Parse URI người dùng chọn, tạo MediaPlayer và phát |
+| `playFromUri(Context, String)` | Parse URI người dùng chọn, tạo MediaPlayer và phát; lỗi thì release player |
 | `playRandom(Context)` | Chọn ngẫu nhiên index trong `DEFAULT_ALARMS` rồi gọi `playFromResource()` |
 | `pause()` | Pause nếu player tồn tại và đang phát |
 | `resume()` | Gọi `start()` lại nếu player tồn tại |
@@ -1417,11 +1479,21 @@ Các Receiver được khai báo trong `AndroidManifest.xml`:
 
 | Hàm | Được gọi bởi | Chức năng |
 |---|---|---|
-| `onReceive(Context, Intent)` | Android/`AlarmManager` | Khởi động `AlarmService`, sau đó xử lý lặp hoặc tắt alarm một lần |
+| `onReceive(Context, Intent)` | Android/`AlarmManager` | Xóa notification trước một phút, khởi động `AlarmService`, sau đó xử lý lặp hoặc tắt alarm một lần |
 
 #### Giải thích `onReceive()`
 
-Bước 1, tạo Intent mở Service và chuyển toàn bộ extras:
+Bước 1, đọc `ALARM_ID` và xóa notification nhắc trước khỏi thanh thông báo:
+
+```java
+notificationManager.cancel(
+    UpcomingAlarmReceiver.notificationId(id)
+);
+```
+
+Code cũng gọi `cancel(id)` để dọn notification được tạo bởi phiên bản app cũ.
+
+Bước 2, tạo Intent mở Service và chuyển toàn bộ extras:
 
 ```java
 Intent serviceIntent = new Intent(context, AlarmService.class);
@@ -1430,7 +1502,7 @@ serviceIntent.putExtras(intent);
 
 Vì `AlarmScheduler` đã để `ALARM_OBJECT`, `ALARM_ID`, có thể cả `SNOOZE` vào Intent gốc, `putExtras()` chuyển chúng sang Service.
 
-Bước 2, khởi động Service theo phiên bản Android:
+Bước 3, khởi động Service theo phiên bản Android:
 
 ```java
 if (SDK_INT >= O) {
@@ -1442,7 +1514,7 @@ if (SDK_INT >= O) {
 
 Từ Android 8, app chạy nền phải dùng foreground service. `AlarmService` sau đó phải gọi `startForeground()` nhanh chóng.
 
-Bước 3, nếu là snooze:
+Bước 4, nếu là snooze:
 
 ```java
 if (intent.getBooleanExtra("SNOOZE", false)) return;
@@ -1450,16 +1522,15 @@ if (intent.getBooleanExtra("SNOOZE", false)) return;
 
 Service vẫn đã được khởi động để báo lại, nhưng Receiver dừng phần xử lý sau. Nhờ vậy snooze không vô hiệu hóa alarm một lần và không đặt trùng lịch lặp.
 
-Bước 4, đọc ID và query dữ liệu mới nhất:
+Bước 5, query dữ liệu mới nhất bằng ID:
 
 ```java
-int id = intent.getIntExtra("ALARM_ID", -1);
 Alarm alarm = new AlarmDao(context).getAlarmbyId(id);
 ```
 
 Dù Intent có `ALARM_OBJECT`, Receiver vẫn đọc SQLite để quyết định trạng thái `enabled` và `repeatDays` hiện tại.
 
-Bước 5, xử lý sau khi reo:
+Bước 6, xử lý sau khi reo:
 
 ```text
 Alarm có repeatDays và đang enabled
@@ -1487,7 +1558,7 @@ Hiện notification “Alarm in 1 minute” trước báo thức chính một ph
 2. Trên Android 8+, tạo channel `upcoming_alarm`.
 3. Đọc `LABEL` và `ALARM_ID` từ Intent.
 4. Tạo notification priority cao.
-5. Dùng `ALARM_ID` làm notification ID.
+5. Dùng `200000 + ALARM_ID` làm notification ID để không trùng foreground notification.
 
 Phần nội dung:
 
@@ -1598,10 +1669,16 @@ Sau đó gắn vào notification:
 
 ```java
 .setCategory(NotificationCompat.CATEGORY_ALARM)
+.setContentIntent(fullScreenPendingIntent)
+.setDeleteIntent(fullScreenPendingIntent)
 .setFullScreenIntent(fullScreenPendingIntent, true)
+.setOngoing(true)
+.setAutoCancel(false)
 ```
 
-Điểm quan trọng: `AlarmService` không gọi `startActivity()` trực tiếp. Service đưa `PendingIntent` full-screen cho notification; **Android quyết định mở `AlarmActivity`** hoặc hiển thị heads-up notification tùy trạng thái màn hình, quyền và chính sách hệ điều hành.
+`setContentIntent()` làm thao tác chạm notification mở `AlarmActivity`. `setOngoing(true)` và `setAutoCancel(false)` giữ notification trong thanh thông báo trong lúc Service đang reo, không cho vuốt xóa theo hành vi thông thường. Android 14+ có thể cho phép vuốt một số ongoing notification; `setDeleteIntent()` là lớp dự phòng để thao tác xóa đó cũng mở `AlarmActivity`, bảo đảm người dùng vẫn có màn Snooze/Dismiss.
+
+Điểm quan trọng: `AlarmService` không gọi `startActivity()` trực tiếp. Service đưa `PendingIntent` full-screen cho notification; **Android quyết định tự mở `AlarmActivity`** hoặc hiển thị heads-up notification tùy trạng thái màn hình, quyền và chính sách hệ điều hành. Nếu hệ thống không tự mở, người dùng có thể chạm notification để vào Activity.
 
 `AlarmActivity` có:
 
@@ -1615,7 +1692,7 @@ nên có thể hiện trên màn hình khóa và bật sáng màn hình khi hệ
 #### Chuyển thành foreground service
 
 ```java
-startForeground(1, notification);
+startForeground(410000, notification);
 ```
 
 Lệnh này:
@@ -1634,6 +1711,7 @@ randomMusic == true
 
 Không random và musicUri có dữ liệu
     -> MusicHelper.playFromUri()
+    -> nếu không phát được: MusicHelper.playRandom()
 
 Còn lại
     -> MusicHelper.playFromResource()
@@ -2382,8 +2460,13 @@ AlarmEditorActivity.pickMusic()
     -> musicPicker callback
     -> nhận Uri
     -> takePersistableUriPermission()
+    -> lấy DISPLAY_NAME
+    -> SavedMusicDao.save(name, uri)
     -> alarm.setMusicUri(uri.toString())
+    -> nếu id >= 0: AlarmDao.updateAlarm(alarm)
 ```
+
+URI luôn được ghi vào bảng `saved_music` để Alarm khác có thể chọn lại. Nếu đang sửa alarm đã có ID, URI còn được ghi ngay vào dòng Alarm. Nếu đang tạo alarm mới, chưa có dòng Alarm để update nên URI được giữ trong Model và insert khi người dùng nhấn Save; cách này tránh tạo alarm rác nếu đóng màn hình tạo mới.
 
 Cấu hình Intent:
 
@@ -2405,7 +2488,12 @@ Khi báo thức reo, `AlarmService` kiểm tra URI:
 
 ```java
 musicHelper.playFromUri(this, alarm.getMusicUri());
+if (!musicHelper.isPlaying()) {
+    musicHelper.playRandom(this);
+}
 ```
+
+Nếu file bị xóa, di chuyển hoặc nhà cung cấp URI không cho đọc nữa, Service phát ngẫu nhiên một trong năm file `res/raw`.
 
 ## 13.9. Đặt lịch alarm và thông báo trước một phút
 
